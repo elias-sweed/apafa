@@ -118,7 +118,7 @@ export const asistenciaService = {
       let query = supabase
         .from('asistencias')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('id', { ascending: false });
 
       if (evento) {
         query = query.eq('evento', evento);

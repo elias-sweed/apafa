@@ -24,8 +24,10 @@ export default function AsistenciaTab() {
     const res = await asistenciaService.obtenerEventos();
     if (res.data) {
       setEventos(res.data);
-      if (!eventoSeleccionado && res.data.length > 0) {
+      if (res.data.length > 0) {
         setEventoSeleccionado(res.data[0].id);
+      } else {
+        setLoading(false);
       }
     }
   };

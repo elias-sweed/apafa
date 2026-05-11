@@ -16,7 +16,52 @@ const parsearQR = (qrData: string): DatosQR | null => {
 };
 
 export const asistenciaService = {
-  registrarAsistencia: async (qrData: string) => {
+  // EVENTOS
+  obtenerEventos: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('eventos')
+        .select('*')
+        .order('fecha', { ascending: false });
+
+      if (error) return { error: 'Error al cargar eventos.' };
+      return { data: data || [], error: null };
+    } catch {
+      return { error: 'Error de conexión.' };
+    }
+  },
+
+  crearEvento: async (nombre: string, fecha: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('eventos')
+        .insert([{ nombre, fecha }])
+        .select()
+        .single();
+
+      if (error) return { error: 'Error al crear evento.' };
+      return { data, error: null };
+    } catch {
+      return { error: 'Error de conexión.' };
+    }
+  },
+
+  eliminarEvento: async (id: number) => {
+    try {
+      const { error } = await supabase
+        .from('eventos')
+        .delete()
+        .eq('id', id);
+
+      if (error) return { error: 'Error al eliminar evento.' };
+      return { error: null };
+    } catch {
+      return { error: 'Error de conexión.' };
+    }
+  },
+
+  // ASISTENCIA
+  registrarAsistencia: async (qrData: string, eventoId: number) => {
     try {
       const datosQR = parsearQR(qrData);
       if (!datosQR || !datosQR.padre_id) {
@@ -28,15 +73,10 @@ export const asistenciaService = {
         return { error: 'QR invalido: identificador de padre no numerico.' };
       }
 
-      // 1. Guardamos la asistencia
       const { error: insertError } = await supabase
         .from('asistencias')
-        .insert([{ 
-          padre_id: padreId,
-          evento: 'Asamblea APAFA 2026' 
-        }]);
+        .insert([{ padre_id: padreId, evento_id: eventoId }]);
 
-      // Si hay error 23505, significa que ya estaba registrado (Unique Constraint)
       if (insertError) {
         if (insertError.code === '23505') {
           return { error: 'DUPLICADO' };
@@ -44,7 +84,6 @@ export const asistenciaService = {
         return { error: 'Error al registrar en la base de datos.' };
       }
 
-      // 2. Traemos los datos del padre
       const { data: padre, error: fetchError } = await supabase
         .from('padron_general')
         .select('*')
@@ -53,8 +92,7 @@ export const asistenciaService = {
 
       if (fetchError) return { error: 'Asistencia guardada, pero no se pudo cargar el nombre.' };
 
-      // 3. Buscamos todos los hijos del mismo padre (por DNI) para mostrar grado/seccion
-      const dni = datosQR.asociado_dni || padre.asociado_dni;
+      const dni = datosQR.asociado_dni || padre?.asociado_dni;
       let hijos: any[] = [];
       if (dni) {
         const { data: siblings } = await supabase
@@ -62,49 +100,7 @@ export const asistenciaService = {
           .select('estudiante, grado, seccion, nivel')
           .eq('asociado_dni', dni)
           .order('estudiante', { ascending: true });
-        if (siblings) {
-          hijos = siblings;
-        }
-      }
-
-      return { data: { ...padre, hijos }, error: null };
-    } catch (err) {
-      return { error: 'Error de conexión.' };
-    }
-  },
-
-  // Modo clasificador: solo lee la info del QR sin registrar asistencia
-  clasificarCarnet: async (qrData: string) => {
-    try {
-      const datosQR = parsearQR(qrData);
-      if (!datosQR || !datosQR.padre_id) {
-        return { error: 'QR invalido.' };
-      }
-
-      const padreId = Number(datosQR.padre_id);
-      if (!Number.isFinite(padreId)) {
-        return { error: 'QR invalido.' };
-      }
-
-      const { data: padre, error: fetchError } = await supabase
-        .from('padron_general')
-        .select('*')
-        .eq('id', padreId)
-        .single();
-
-      if (fetchError) return { error: 'No se encontro el registro.' };
-
-      const dni = datosQR.asociado_dni || padre.asociado_dni;
-      let hijos: any[] = [];
-      if (dni) {
-        const { data: siblings } = await supabase
-          .from('padron_general')
-          .select('estudiante, grado, seccion, nivel')
-          .eq('asociado_dni', dni)
-          .order('estudiante', { ascending: true });
-        if (siblings) {
-          hijos = siblings;
-        }
+        if (siblings) hijos = siblings;
       }
 
       return { data: { ...padre, hijos }, error: null };
@@ -113,21 +109,24 @@ export const asistenciaService = {
     }
   },
 
-  obtenerAsistencias: async ({ evento }: { evento?: string } = {}) => {
+  obtenerAsistencias: async ({ evento_id, page, pageSize }: { evento_id?: number; page?: number; pageSize?: number } = {}) => {
     try {
       let query = supabase
         .from('asistencias')
-        .select('*')
+        .select('*', { count: 'exact' })
         .order('id', { ascending: false });
 
-      if (evento) {
-        query = query.eq('evento', evento);
+      if (evento_id) query = query.eq('evento_id', evento_id);
+
+      if (page !== undefined && pageSize !== undefined) {
+        const from = page * pageSize;
+        const to = from + pageSize - 1;
+        query = query.range(from, to);
       }
 
-      const { data: asistencias, error } = await query;
-      if (error) return { error: 'Error al cargar asistencias.' };
+      const { data: asistencias, error, count } = await query;
+      if (error) return { error: 'Error al cargar asistencias.', data: [], count: 0 };
 
-      // Obtener todos los padre_id únicos y traer sus datos
       const ids = [...new Set(asistencias?.map(a => a.padre_id).filter(Boolean) || [])];
       const { data: padres } = await supabase
         .from('padron_general')
@@ -136,7 +135,6 @@ export const asistenciaService = {
 
       const padresPorId = new Map(padres?.map(p => [p.id, p]) || []);
 
-      // Agrupar por asociado_dni
       const map = new Map<string, any>();
       for (const row of asistencias || []) {
         const p = padresPorId.get(row.padre_id);
@@ -147,9 +145,8 @@ export const asistenciaService = {
             padre_id: row.padre_id,
             asociado_nombre: p?.asociado_nombre || '',
             asociado_dni: p?.asociado_dni || '',
-            segundo_responsable: p?.segundo_responsable || '',
             created_at: row.created_at,
-            evento: row.evento,
+            evento_id: row.evento_id,
             hijos: [],
           });
         }
@@ -166,64 +163,71 @@ export const asistenciaService = {
         }
       }
 
-      return { data: Array.from(map.values()), error: null };
+      return { data: Array.from(map.values()), count: count || 0, error: null };
+    } catch {
+      return { error: 'Error de conexión.', data: [], count: 0 };
+    }
+  },
+
+  eliminarAsistencia: async (id: number) => {
+    try {
+      const { error } = await supabase
+        .from('asistencias')
+        .delete()
+        .eq('id', id);
+
+      if (error) return { error: 'Error al eliminar asistencia.' };
+      return { error: null };
     } catch {
       return { error: 'Error de conexión.' };
     }
   },
 
-  exportarInasistentes: async ({ evento }: { evento?: string } = {}) => {
+  exportarInasistentes: async (eventoId: number) => {
     try {
-      const eventoFiltro = evento || 'Asamblea APAFA 2026';
-
-      // 1. Obtener los padre_id que ya asistieron al evento
       const { data: asistencias } = await supabase
         .from('asistencias')
         .select('padre_id')
-        .eq('evento', eventoFiltro);
+        .eq('evento_id', eventoId);
 
       const idsAsistieron = new Set(asistencias?.map(a => a.padre_id) || []);
 
-      // 2. Traer todos los registros del padrón agrupados por DNI
       const { data: padron, error: errPadron } = await supabase
         .from('padron_general')
-        .select('id, asociado_dni, asociado_nombre, estudiante, grado, seccion, nivel')
-        .not('asociado_dni', 'is', null);
+        .select('id, asociado_dni, asociado_nombre, estudiante, grado, seccion, nivel');
 
-      if (errPadron) return { error: 'Error al cargar el padrón.' };
+      if (errPadron) return { error: 'Error al cargar el padrón.', data: [] };
 
-      // 3. Agrupar por DNI y determinar si algún hijo asistió
       const padresMap = new Map<string, any>();
-      for (const row of padron) {
-        const dni = row.asociado_dni;
-        if (!padresMap.has(dni)) {
-          padresMap.set(dni, {
+      for (const row of padron || []) {
+        const key = row.asociado_dni || row.asociado_nombre || `sinid-${row.id}`;
+        if (!padresMap.has(key)) {
+          padresMap.set(key, {
             asociado_nombre: row.asociado_nombre,
-            asociado_dni: dni,
+            asociado_dni: row.asociado_dni || '',
             asistio: false,
             hijos: [],
           });
         }
-        const entry = padresMap.get(dni);
-        if (idsAsistieron.has(row.id)) {
-          entry.asistio = true;
+        const entry = padresMap.get(key);
+        if (idsAsistieron.has(row.id)) entry.asistio = true;
+        if (!entry.hijos.some((h: any) => h.estudiante === row.estudiante)) {
+          entry.hijos.push({
+            estudiante: row.estudiante,
+            grado: row.grado,
+            seccion: row.seccion,
+            nivel: row.nivel,
+          });
         }
-        entry.hijos.push({
-          estudiante: row.estudiante,
-          grado: row.grado,
-          seccion: row.seccion,
-          nivel: row.nivel,
-        });
       }
 
-      // 4. Filtrar solo los que NO asistieron
       const inasistentes = Array.from(padresMap.values())
         .filter(p => !p.asistio)
-        .sort((a, b) => a.asociado_nombre?.localeCompare(b.asociado_nombre));
+        .sort((a, b) => (a.asociado_nombre || '').localeCompare(b.asociado_nombre || ''));
 
       return { data: inasistentes, error: null };
     } catch {
-      return { error: 'Error de conexión.' };
+      return { error: 'Error de conexión.', data: [] };
     }
   }
 };

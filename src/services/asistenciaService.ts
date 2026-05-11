@@ -221,13 +221,15 @@ export const asistenciaService = {
         }
       }
 
-      const inasistentes = Array.from(padresMap.values())
+      const todos = Array.from(padresMap.values());
+      const totalAsistieron = todos.filter(p => p.asistio).length;
+      const inasistentes = todos
         .filter(p => !p.asistio)
         .sort((a, b) => (a.asociado_nombre || '').localeCompare(b.asociado_nombre || ''));
 
-      return { data: inasistentes, error: null };
+      return { data: inasistentes, totalAsistieron, totalPadres: todos.length, error: null };
     } catch {
-      return { error: 'Error de conexión.', data: [] };
+      return { error: 'Error de conexión.', data: [], totalAsistieron: 0, totalPadres: 0 };
     }
   }
 };

@@ -11,7 +11,8 @@ export default function AsistenciaTab() {
   const [eventoSeleccionado, setEventoSeleccionado] = useState<number | null>(null);
   const [asistencias, setAsistencias] = useState<any[]>([]);
   const [inasistentes, setInasistentes] = useState<any[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
+  const [totalAsistieron, setTotalAsistieron] = useState(0);
+  const [totalPadres, setTotalPadres] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filtro, setFiltro] = useState<Filtro>('todos');
@@ -43,13 +44,14 @@ export default function AsistenciaTab() {
     ]);
 
     if (resAsistencias.error) setError(resAsistencias.error);
-    else {
-      setAsistencias(resAsistencias.data || []);
-      setTotalCount(resAsistencias.count || 0);
-    }
+    else setAsistencias(resAsistencias.data || []);
 
     if (resInasistentes.error) setError(resInasistentes.error);
-    else setInasistentes(resInasistentes.data || []);
+    else {
+      setInasistentes(resInasistentes.data || []);
+      setTotalAsistieron(resInasistentes.totalAsistieron || 0);
+      setTotalPadres(resInasistentes.totalPadres || 0);
+    }
 
     setLoading(false);
   };
@@ -92,7 +94,7 @@ export default function AsistenciaTab() {
     URL.revokeObjectURL(url);
   };
 
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const totalPages = Math.ceil(totalAsistieron / PAGE_SIZE);
 
   // Combinar asistencias + inasistentes para la tabla filtrada
   const tablaCompleta = [
@@ -170,6 +172,22 @@ export default function AsistenciaTab() {
           <div className="mt-2 flex items-center gap-2 text-slate-500 text-xs">
             <Calendar size={14} />
             <span>{eventoActual.fecha?.slice(0, 10)} - {eventoActual.nombre}</span>
+            <button
+              onClick={async () => {
+                if (!confirm(`¿Eliminar evento "${eventoActual.nombre}"?`)) return;
+                await asistenciaService.eliminarEvento(eventoActual.id);
+                setEventos(prev => prev.filter(e => e.id !== eventoActual.id));
+                setEventoSeleccionado(null);
+                setAsistencias([]);
+                setInasistentes([]);
+                setTotalAsistieron(0);
+                setTotalPadres(0);
+              }}
+              className="ml-auto p-1 text-red-400 hover:text-red-600 transition-colors"
+              title="Eliminar evento"
+            >
+              <Trash2 size={14} />
+            </button>
           </div>
         )}
       </div>
@@ -180,7 +198,7 @@ export default function AsistenciaTab() {
           <div className="flex items-center gap-3">
             <Calendar className="text-blue-600" size={28} />
             <div>
-              <p className="text-2xl font-bold text-slate-800">{totalCount}</p>
+              <p className="text-2xl font-bold text-slate-800">{totalAsistieron}</p>
               <p className="text-sm text-slate-500">Asistieron</p>
             </div>
           </div>
@@ -198,7 +216,7 @@ export default function AsistenciaTab() {
           <div className="flex items-center gap-3">
             <Users className="text-green-600" size={28} />
             <div>
-              <p className="text-2xl font-bold text-slate-800">{totalCount + inasistentes.length}</p>
+              <p className="text-2xl font-bold text-slate-800">{totalPadres}</p>
               <p className="text-sm text-slate-500">Total Padres</p>
             </div>
           </div>
@@ -304,7 +322,7 @@ export default function AsistenciaTab() {
         {/* PAGINACIÓN */}
         <div className="p-4 border-t border-slate-100 flex justify-between items-center">
           <span className="text-sm text-slate-600">
-            Página {page + 1} de {totalPages || 1} ({totalCount} registros)
+            Página {page + 1} de {totalPages || 1} ({totalAsistieron} asistieron)
           </span>
           <div className="flex gap-2">
             <button

@@ -25,7 +25,7 @@ export default function EscanerAsistencia() {
             const res = await asistenciaService.registrarAsistencia(decodedText);
 
             if (res.error === 'DUPLICADO') {
-              setResultado({ estado: 'duplicado', mensaje: 'Esta persona ya registró su asistencia hoy.' });
+              setResultado({ estado: 'duplicado', mensaje: 'Ya se registró su asistencia anteriormente.' });
             } else if (res.error) {
               setResultado({ estado: 'error', mensaje: res.error });
             } else {
@@ -104,12 +104,10 @@ export default function EscanerAsistencia() {
         )}
 
         {resultado?.estado === 'duplicado' && (
-          <div className="bg-yellow-50 border-2 border-yellow-500 rounded-2xl p-4 shadow-lg animate-fade-in flex items-center gap-4">
-            <Info className="text-yellow-600 shrink-0" size={36} />
-            <div>
-              <h2 className="text-yellow-800 font-bold">Ya registrado</h2>
-              <p className="text-yellow-700 text-sm">{resultado.mensaje}</p>
-            </div>
+          <div className="bg-yellow-50 border-2 border-yellow-500 rounded-2xl p-5 shadow-lg animate-fade-in text-center">
+            <Info className="text-yellow-600 mx-auto mb-2" size={48} />
+            <h2 className="text-yellow-800 font-black text-xl uppercase">Ya escaneado</h2>
+            <p className="text-yellow-700 text-sm font-medium">{resultado.mensaje}</p>
           </div>
         )}
 

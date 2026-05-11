@@ -117,21 +117,30 @@ export const asistenciaService = {
     try {
       let query = supabase
         .from('asistencias')
-        .select('*, padron_general!inner(*)')
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (evento) {
         query = query.eq('evento', evento);
       }
 
-      const { data, error } = await query;
+      const { data: asistencias, error } = await query;
       if (error) return { error: 'Error al cargar asistencias.' };
 
-      // Agrupar por asociado_dni para consolidar padres con varios hijos
+      // Obtener todos los padre_id únicos y traer sus datos
+      const ids = [...new Set(asistencias?.map(a => a.padre_id).filter(Boolean) || [])];
+      const { data: padres } = await supabase
+        .from('padron_general')
+        .select('*')
+        .in('id', ids);
+
+      const padresPorId = new Map(padres?.map(p => [p.id, p]) || []);
+
+      // Agrupar por asociado_dni
       const map = new Map<string, any>();
-      for (const row of data) {
-        const p = row.padron_general;
-        const dni = p?.asociado_dni || 'unknown';
+      for (const row of asistencias || []) {
+        const p = padresPorId.get(row.padre_id);
+        const dni = p?.asociado_dni || `id-${row.padre_id}`;
         if (!map.has(dni)) {
           map.set(dni, {
             id: row.id,
@@ -145,12 +154,15 @@ export const asistenciaService = {
           });
         }
         if (p) {
-          map.get(dni).hijos.push({
-            estudiante: p.estudiante,
-            grado: p.grado,
-            seccion: p.seccion,
-            nivel: p.nivel,
-          });
+          const entry = map.get(dni);
+          if (!entry.hijos.some((h: any) => h.estudiante === p.estudiante)) {
+            entry.hijos.push({
+              estudiante: p.estudiante,
+              grado: p.grado,
+              seccion: p.seccion,
+              nivel: p.nivel,
+            });
+          }
         }
       }
 

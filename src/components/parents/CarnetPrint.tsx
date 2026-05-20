@@ -1,6 +1,7 @@
 import { QRCodeSVG } from 'qrcode.react';
 import { AlertCircle } from 'lucide-react';
 import logoEscuela from '../../assets/logo.png';
+import logoApafa from '../../assets/logo_apafa.png';
 
 function toTitleCase(str: string) {
   return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
@@ -17,54 +18,78 @@ export default function CarnetPrint({ parent, printMode = 'a4' }: { parent: any,
 
   return (
     <div className={`flex items-center justify-center p-2 print:p-1 ${printMode === 'a4' ? 'print:break-inside-avoid' : 'print:m-0'}`}>
-      {/* TARJETA HORIZONTAL ÚNICA */}
       <div className="w-[86mm] h-[54mm] bg-white rounded-[3mm] border-[1.2mm] border-amber-400 overflow-hidden flex relative shadow-md box-border print:shadow-none">
-        
+
         {/* LADO IZQUIERDO - INFORMACIÓN */}
-        <div className="flex-1 p-[2.5mm] flex flex-col justify-between relative z-10">
-          
+        <div className="flex-1 p-[2.5mm] flex flex-col relative z-10">
+
           {/* Encabezado */}
-          <div className="flex items-center gap-1.5">
-            <img src={logoEscuela} alt="Logo" className="w-[8mm] h-[9mm] object-contain" />
-            <div className="text-[1.8mm] leading-tight">
-              <p className="font-black text-slate-900 uppercase">APAFA I.E</p>
-              <p className="font-black text-slate-900 uppercase">"JIMENEZ PIMENTEL"</p>
-              <p className="text-slate-600">Año 2026</p>
+          <div className="flex items-start justify-between">
+            <img src={logoEscuela} alt="Logo I.E." className="w-[8mm] h-[9mm] object-contain" />
+            <div className="text-center flex-1">
+              <p className="text-[2mm] text-slate-800 font-bold uppercase leading-tight">AÑO 2026</p>
+              <p className="text-[2.5mm] font-black text-slate-900 leading-tight">APAFA I.E</p>
+              <p className="text-[2.5mm] font-black text-slate-900 leading-tight">"JIMENEZ PIMENTEL"</p>
             </div>
           </div>
 
-          {/* Nombre del Apoderado */}
-          <div className="mt-1">
-            <p className="text-[1.6mm] text-slate-500 font-bold uppercase tracking-wide">Apoderado</p>
-            <p className="text-[2.5mm] font-bold text-slate-900 uppercase leading-tight break-words">
-              {parent.asociado_nombre ? toTitleCase(parent.asociado_nombre) : ''}
-            </p>
-            <p className="text-[1.8mm] text-slate-600 font-medium">DNI: {parent.asociado_dni || '---'}</p>
+          {/* Marca de agua */}
+          <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none opacity-[0.1]">
+            <img src={logoApafa} alt="" className="w-[30mm] h-[30mm] object-contain" />
           </div>
 
-          {/* Segundo Apoderado */}
-          {parent.segundo_responsable && (
-            <div className="mt-0.5">
-              <p className="text-[1.6mm] text-slate-500 font-bold uppercase tracking-wide">2do Apoderado</p>
-              <p className="text-[2.2mm] font-bold text-slate-900 uppercase leading-tight break-words">
-                {toTitleCase(parent.segundo_responsable)}
-              </p>
+          {/* Datos */}
+          <div className="flex flex-col gap-[1.5mm] z-10 relative mt-[2mm]">
+            <div>
+              <p className="text-[1.8mm] text-slate-900 font-medium leading-tight">Nombre del Apoderado Asociado:</p>
+              <div className="border-b border-slate-800 text-[2mm] font-bold text-slate-800 leading-tight truncate uppercase">
+                {parent.asociado_nombre ? toTitleCase(parent.asociado_nombre) : ''}
+              </div>
             </div>
-          )}
+
+            <div className="flex gap-[1.5mm]">
+              <div className="flex-1">
+                <p className="text-[1.8mm] text-slate-900 font-medium leading-tight">D.N.I.:</p>
+                <div className="border-b border-slate-800 h-[3.5mm]"></div>
+              </div>
+              <div className="flex-[1.5]">
+                <p className="text-[1.8mm] text-slate-900 font-medium leading-tight">Número de Teléfono:</p>
+                <div className="border-b border-slate-800 h-[3.5mm]"></div>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-[1.8mm] text-slate-900 font-medium leading-tight">Nombre del Segundo Apoderado:</p>
+              <div className="border-b border-slate-800 text-[2mm] font-bold text-slate-800 leading-tight truncate uppercase">
+                {parent.segundo_responsable ? toTitleCase(parent.segundo_responsable) : ''}
+              </div>
+            </div>
+
+            <div className="flex gap-[1.5mm]">
+              <div className="flex-1">
+                <p className="text-[1.8mm] text-slate-900 font-medium leading-tight">D.N.I.:</p>
+                <div className="border-b border-slate-800 h-[3.5mm]"></div>
+              </div>
+              <div className="flex-[1.5]">
+                <p className="text-[1.8mm] text-slate-900 font-medium leading-tight">Número de Teléfono:</p>
+                <div className="border-b border-slate-800 h-[3.5mm]"></div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* LADO DERECHO - QR */}
-        <div className="w-[30mm] flex flex-col items-center justify-center p-[2mm] border-l-[1.2mm] border-amber-400 relative z-10">
-          <p className="text-[1.5mm] font-bold text-slate-700 uppercase text-center leading-tight mb-1">
-            Control de Asistencia
+        <div className="w-[28mm] flex flex-col items-center justify-center p-[2mm] border-l-[1.2mm] border-amber-400 relative z-10">
+          <p className="text-[1.8mm] font-black text-slate-900 text-center uppercase leading-tight mb-[3mm]">
+            CONTROL DE ASISTENCIA
           </p>
-          <div className={`p-[1mm] border-[1mm] border-amber-400 flex items-center justify-center w-[24mm] h-[24mm] ${hasDNI ? 'bg-white' : 'bg-slate-50'}`}>
+          <div className={`p-[1mm] border-[1mm] border-amber-400 flex items-center justify-center w-[22mm] h-[22mm] ${hasDNI ? 'bg-white' : 'bg-slate-50'}`}>
             {hasDNI ? (
-              <QRCodeSVG value={qrPayload} size={80} level="H" />
+              <QRCodeSVG value={qrPayload} size={72} level="H" />
             ) : (
               <div className="text-center text-orange-600 flex flex-col items-center">
                 <AlertCircle size={16} className="mb-0.5 opacity-50" />
-                <span className="text-[1.8mm] font-bold uppercase text-center leading-tight">Falta DNI</span>
+                <span className="text-[2mm] font-bold uppercase text-center leading-tight">Falta DNI</span>
               </div>
             )}
           </div>

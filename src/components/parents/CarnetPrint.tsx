@@ -7,7 +7,7 @@ function toTitleCase(str: string) {
   return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
 }
 
-export default function CarnetPrint({ parent, printMode = 'a4' }: { parent: any, printMode?: 'a4' | 'pvc' }) {
+export default function CarnetPrint({ parent, printMode = 'a4', numero }: { parent: any, printMode?: 'a4' | 'pvc', numero?: number }) {
   const hasDNI = Boolean(parent.asociado_dni);
   const qrPayload = JSON.stringify({
     padre_id: parent.id ?? null,
@@ -32,6 +32,13 @@ export default function CarnetPrint({ parent, printMode = 'a4' }: { parent: any,
               <p className="text-[2.5mm] font-black text-slate-900 leading-tight">"JIMENEZ PIMENTEL"</p>
             </div>
           </div>
+
+          {/* Número de carnet */}
+          {numero && (
+            <div className="absolute top-[2mm] right-[2mm] z-20 bg-amber-500 text-white text-[2mm] font-bold rounded-full w-[5mm] h-[5mm] flex items-center justify-center shadow-sm">
+              {numero}
+            </div>
+          )}
 
           {/* Marca de agua */}
           <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none opacity-[0.1]">

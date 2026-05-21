@@ -23,6 +23,13 @@ export default function CarnetPrint({ parent, printMode = 'a4', numero }: { pare
         {/* LADO IZQUIERDO - INFORMACIÓN */}
         <div className="flex-1 p-[2.5mm] flex flex-col relative z-10">
 
+          {/* Número de carnet */}
+          {numero !== undefined && (
+            <div className="absolute top-0 right-0 bg-amber-500 text-white text-[1.6mm] font-bold px-[1.5mm] py-[0.5mm] shadow-sm">
+              N° {String(numero).padStart(4, '0')}
+            </div>
+          )}
+
           {/* Encabezado */}
           <div className="flex items-start justify-between">
             <img src={logoEscuela} alt="Logo I.E." className="w-[8mm] h-[9mm] object-contain" />
@@ -32,13 +39,6 @@ export default function CarnetPrint({ parent, printMode = 'a4', numero }: { pare
               <p className="text-[2.5mm] font-black text-slate-900 leading-tight">"JIMENEZ PIMENTEL"</p>
             </div>
           </div>
-
-          {/* Número de carnet */}
-          {numero !== undefined && (
-            <div className="absolute top-[2mm] right-[2mm] z-20 bg-amber-500 text-white text-[1.6mm] font-bold px-[1.5mm] py-[0.5mm] rounded-[0.5mm] shadow-sm">
-              N° {String(numero).padStart(4, '0')}
-            </div>
-          )}
 
           {/* Marca de agua */}
           <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none opacity-[0.1]">

@@ -34,9 +34,9 @@ export default function CarnetPrint({ parent, printMode = 'a4', numero }: { pare
           </div>
 
           {/* Número de carnet */}
-          {numero && (
-            <div className="absolute top-[2mm] right-[2mm] z-20 bg-amber-500 text-white text-[2mm] font-bold rounded-full w-[5mm] h-[5mm] flex items-center justify-center shadow-sm">
-              {numero}
+          {numero !== undefined && (
+            <div className="absolute top-[2mm] right-[2mm] z-20 bg-amber-500 text-white text-[1.6mm] font-bold px-[1.5mm] py-[0.5mm] rounded-[0.5mm] shadow-sm">
+              N° {String(numero).padStart(4, '0')}
             </div>
           )}
 

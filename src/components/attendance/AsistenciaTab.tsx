@@ -295,7 +295,7 @@ export default function AsistenciaTab() {
                 </tr>
               )}
               {paginaActual.map((p: any) => (
-                <tr key={p.asociado_dni || p.id} className={`transition-colors ${
+                <tr key={p.padre_id ? `a-${p.padre_id}` : `f-${p.asociado_dni || p.asociado_nombre}`} className={`transition-colors ${
                   p._estado === 'asistio' ? 'hover:bg-green-50/50' : 'hover:bg-red-50/50'
                 }`}>
                   <td className="px-4 py-3 text-sm font-semibold text-slate-800 uppercase">

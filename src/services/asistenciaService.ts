@@ -152,13 +152,13 @@ export const asistenciaService = {
 
       let padresData: any[] = [];
       if (ids.length > 0) {
-        from = 0;
+        let offset = 0;
         while (true) {
-          const batch = ids.slice(from, from + 200);
+          const batch = ids.slice(offset, offset + 200);
           if (batch.length === 0) break;
           const { data } = await supabase.from('padron_general').select('*').in('id', batch);
           if (data) padresData = padresData.concat(data);
-          from += 200;
+          offset += 200;
         }
       }
       const padresPorId = new Map(padresData?.map(p => [p.id, p]) || []);

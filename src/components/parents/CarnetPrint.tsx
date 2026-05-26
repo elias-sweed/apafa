@@ -12,8 +12,6 @@ export default function CarnetPrint({ parent, printMode = 'a4', numero }: { pare
   const qrPayload = JSON.stringify({
     padre_id: parent.id ?? null,
     asociado_dni: parent.asociado_dni ?? '',
-    asociado_nombre: parent.asociado_nombre ?? '',
-    segundo_responsable: parent.segundo_responsable ?? '',
   });
 
   return (

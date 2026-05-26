@@ -10,8 +10,6 @@ export default function CarnetCard({ parent }: any) {
   const qrPayload = JSON.stringify({
     padre_id: parent.id ?? null,
     asociado_dni: parent.asociado_dni ?? '',
-    asociado_nombre: parent.asociado_nombre ?? '',
-    segundo_responsable: parent.segundo_responsable ?? '',
   });
 
   return (

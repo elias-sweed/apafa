@@ -125,35 +125,49 @@ export default function Dashboard() {
                   <table className="w-full text-left border-collapse min-w-max">
                     <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[11px] font-semibold tracking-wider">
                       <tr>
-                        <th className="px-4 py-4">Grado/Sec</th>
-                        <th className="px-4 py-4">Estudiante</th>
-                        <th className="px-4 py-4">Asociado (Padre/Madre)</th>
+                        <th className="px-4 py-4">Hijos</th>
+                        <th className="px-4 py-4">Apoderado</th>
                         <th className="px-4 py-4">DNI</th>
                         <th className="px-4 py-4 text-center">Acciones</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {data.map((row) => (
-                        <tr key={row.id} className="hover:bg-blue-50/50 transition-colors">
-                          <td className="px-4 py-3 text-sm font-medium uppercase text-slate-800">{row.grado} - {row.seccion}</td>
-                          <td className="px-4 py-3 text-sm text-slate-700 uppercase">{row.estudiante}</td>
-                          <td className="px-4 py-3 text-sm font-semibold text-slate-800 uppercase">
-                            {row.asociado_nombre || <span className="text-orange-500 text-xs italic">Falta Nombre</span>}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-slate-500">
-                            {row.asociado_dni || <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-bold">SIN DNI</span>}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <button 
-                              onClick={() => handleEdit(row)}
-                              className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                              title="Editar Datos"
-                            >
-                              <Pencil size={18} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                      {(() => {
+                        const groups = new Map<string, any[]>();
+                        for (const row of data) {
+                          const key = row.asociado_dni || (row.asociado_nombre || '').trim().toUpperCase() || `id-${row.id}`;
+                          if (!groups.has(key)) groups.set(key, []);
+                          groups.get(key)!.push(row);
+                        }
+                        return Array.from(groups.entries()).map(([key, rows]) => (
+                          <tr key={key} className="hover:bg-blue-50/50 transition-colors">
+                            <td className="px-4 py-3">
+                              <div className="flex flex-wrap gap-1">
+                                {rows.map((r: any) => (
+                                  <span key={r.id} className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] font-medium">
+                                    {r.grado} "{r.seccion}" - {r.estudiante}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-sm font-semibold text-slate-800 uppercase">
+                              {rows[0].asociado_nombre || <span className="text-orange-500 text-xs italic">Falta Nombre</span>}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-slate-500">
+                              {rows[0].asociado_dni || <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-bold">SIN DNI</span>}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <button 
+                                onClick={() => handleEdit(rows[0])}
+                                className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                                title="Editar Datos"
+                              >
+                                <Pencil size={18} />
+                              </button>
+                            </td>
+                          </tr>
+                        ));
+                      })()}
                     </tbody>
                   </table>
                 </div>

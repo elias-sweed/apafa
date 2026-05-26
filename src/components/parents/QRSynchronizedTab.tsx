@@ -24,7 +24,7 @@ export default function QRSynchronizedTab({ data, loading, pageOffset = 0 }: { d
 
   // Agrupar por padre (asociado_dni o asociado_nombre) para evitar carnets duplicados
   const grouped = data.reduce<Record<string, any>>((acc, row) => {
-    const key = row.asociado_dni || row.asociado_nombre || `unknown-${row.id}`;
+    const key = row.asociado_dni || (row.asociado_nombre || '').trim().toUpperCase() || `unknown-${row.id}`;
     if (!acc[key]) {
       acc[key] = { ...row, students: [] };
     }

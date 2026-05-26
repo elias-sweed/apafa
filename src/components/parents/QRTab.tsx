@@ -20,7 +20,7 @@ export default function QRTab({ data, loading }: { data: any[], loading: boolean
 
   // Agrupar por padre para evitar carnets duplicados
   const grouped = data.reduce<Record<string, any>>((acc, row) => {
-    const key = row.asociado_dni || row.asociado_nombre || `unknown-${row.id}`;
+    const key = row.asociado_dni || (row.asociado_nombre || '').trim().toUpperCase() || `unknown-${row.id}`;
     if (!acc[key]) {
       acc[key] = { ...row, students: [] };
     }

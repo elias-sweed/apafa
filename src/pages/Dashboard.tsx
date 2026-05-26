@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import FilterBar from '../components/parents/FilterBar';
 import EditModal from '../components/parents/EditModal';
+import AddParentModal from '../components/parents/AddParentModal';
 import InicioTab from '../components/home/InicioTab';
 import QRSynchronizedTab from '../components/parents/QRSynchronizedTab';
 import AsistenciaTab from '../components/attendance/AsistenciaTab';
 import ConfigTab from '../components/settings/ConfigTab';
 import { parentService } from '../services/parentService';
-import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pencil, Trash2, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('inicio');
@@ -16,6 +18,7 @@ export default function Dashboard() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedParent, setSelectedParent] = useState(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const [filters, setFilters] = useState({
     searchTerm: '',
@@ -54,6 +57,18 @@ export default function Dashboard() {
   const handleEdit = (parent: any) => {
     setSelectedParent(parent);
     setIsModalOpen(true);
+  };
+
+  const handleDelete = async (dni: string, name: string) => {
+    const display = name || `DNI: ${dni}`;
+    if (!confirm(`¿Eliminar a ${display} y todos sus hijos del padrón?`)) return;
+    const { error } = await parentService.deleteParent(dni, name);
+    if (error) {
+      toast.error('Error al eliminar');
+    } else {
+      toast.success('Eliminado correctamente');
+      loadData();
+    }
   };
 
   return (
@@ -116,6 +131,16 @@ export default function Dashboard() {
         {activeTab === 'padres' && (
           <>
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="flex justify-between items-center p-4 border-b border-slate-200 print:hidden">
+                <span className="text-sm text-slate-500">Haciendo clic en un padre puedes editar sus datos</span>
+                <button
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                >
+                  <Plus size={18} />
+                  Agregar Padre
+                </button>
+              </div>
               {loading ? (
                 <div className="w-full p-8 text-center text-slate-500 animate-pulse">Cargando datos...</div>
               ) : data.length === 0 ? (
@@ -170,14 +195,23 @@ export default function Dashboard() {
                             <td className="px-4 py-3 text-sm text-slate-500">
                               {group.dni || <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-bold">SIN DNI</span>}
                             </td>
-                            <td className="px-4 py-3 text-center">
-                              <button 
-                                onClick={() => handleEdit(group.rows[0])}
-                                className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                                title="Editar Datos"
-                              >
-                                <Pencil size={18} />
-                              </button>
+                            <td className="px-4 py-3 text-center whitespace-nowrap">
+                              <div className="flex items-center justify-center gap-1">
+                                <button 
+                                  onClick={() => handleEdit(group.rows[0])}
+                                  className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                                  title="Editar Datos"
+                                >
+                                  <Pencil size={18} />
+                                </button>
+                                <button 
+                                  onClick={() => handleDelete(group.dni, group.displayName)}
+                                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Eliminar"
+                                >
+                                  <Trash2 size={18} />
+                                </button>
+                                </div>
                             </td>
                           </tr>
                         ));
@@ -192,6 +226,11 @@ export default function Dashboard() {
               isOpen={isModalOpen} 
               onClose={() => setIsModalOpen(false)} 
               parent={selectedParent}
+              onSaved={loadData}
+            />
+            <AddParentModal 
+              isOpen={isAddModalOpen} 
+              onClose={() => setIsAddModalOpen(false)} 
               onSaved={loadData}
             />
           </>

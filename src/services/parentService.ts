@@ -66,5 +66,18 @@ export const parentService = {
       totalAsociados: unique.size,
       sinDNI,
     };
+  },
+
+  async deleteParent(dni: string, name: string) {
+    const query = dni
+      ? supabase.from('padron_general').delete().eq('asociado_dni', dni)
+      : supabase.from('padron_general').delete().eq('asociado_nombre', name);
+    const { error } = await query;
+    return { error };
+  },
+
+  async addParent(data: any) {
+    const { error } = await supabase.from('padron_general').insert([data]);
+    return { error };
   }
 };

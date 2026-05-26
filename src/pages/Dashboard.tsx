@@ -133,17 +133,30 @@ export default function Dashboard() {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {(() => {
-                        const groups = new Map<string, any[]>();
+                        // Build name -> DNI lookup so rows with same name but missing DNI still group together
+                        const nameToDNI: Record<string, string> = {};
                         for (const row of data) {
-                          const key = row.asociado_dni || (row.asociado_nombre || '').trim().toUpperCase() || `id-${row.id}`;
-                          if (!groups.has(key)) groups.set(key, []);
-                          groups.get(key)!.push(row);
+                          const name = (row.asociado_nombre || '').trim().toUpperCase();
+                          if (row.asociado_dni && name) nameToDNI[name] ||= row.asociado_dni;
                         }
-                        return Array.from(groups.entries()).map(([key, rows]) => (
+                        const groups = new Map<string, { rows: any[]; dni: string; displayName: string }>();
+                        const seenStudents = new Map<string, Set<string>>();
+                        for (const row of data) {
+                          const name = (row.asociado_nombre || '').trim().toUpperCase();
+                          const displayName = (row.asociado_nombre || '').trim();
+                          const dni = row.asociado_dni || nameToDNI[name] || '';
+                          const key = dni || name || `id-${row.id}`;
+                          if (!groups.has(key)) groups.set(key, { rows: [], dni, displayName });
+                          // Deduplicate students within a parent (same grado/seccion/estudiante)
+                          const sKey = `${row.estudiante || ''}|${row.grado || ''}|${row.seccion || ''}`;
+                          const set = seenStudents.get(key)!;
+                          if (!set.has(sKey)) { set.add(sKey); groups.get(key)!.rows.push(row); }
+                        }
+                        return Array.from(groups.entries()).map(([key, group]) => (
                           <tr key={key} className="hover:bg-blue-50/50 transition-colors">
                             <td className="px-4 py-3 align-top">
                               <div className="space-y-1">
-                                {rows.map((r: any) => (
+                                {group.rows.map((r: any) => (
                                   <div key={r.id} className="text-[11px] text-slate-700 leading-tight">
                                     <span className="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-medium uppercase">{r.grado} "{r.seccion}"</span>
                                     <span className="ml-1">{r.estudiante}</span>
@@ -152,14 +165,14 @@ export default function Dashboard() {
                               </div>
                             </td>
                             <td className="px-4 py-3 text-sm font-semibold text-slate-800 uppercase">
-                              {rows[0].asociado_nombre || <span className="text-orange-500 text-xs italic">Falta Nombre</span>}
+                              {group.displayName || <span className="text-orange-500 text-xs italic">Falta Nombre</span>}
                             </td>
                             <td className="px-4 py-3 text-sm text-slate-500">
-                              {rows[0].asociado_dni || <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-bold">SIN DNI</span>}
+                              {group.dni || <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-bold">SIN DNI</span>}
                             </td>
                             <td className="px-4 py-3 text-center">
                               <button 
-                                onClick={() => handleEdit(rows[0])}
+                                onClick={() => handleEdit(group.rows[0])}
                                 className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
                                 title="Editar Datos"
                               >

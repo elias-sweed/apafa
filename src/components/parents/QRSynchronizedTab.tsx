@@ -22,17 +22,29 @@ export default function QRSynchronizedTab({ data, loading, pageOffset = 0 }: { d
     return <div className="p-20 text-center text-slate-500 bg-white rounded-xl shadow-sm border border-slate-200">No se encontraron resultados.</div>;
   }
 
-  // Agrupar por padre (asociado_dni o asociado_nombre) para evitar carnets duplicados
+  // Agrupar por padre para evitar carnets duplicados, resolviendo DNI por nombre si está vacío
+  const nameToDNI: Record<string, string> = {};
+  for (const row of data) {
+    const name = (row.asociado_nombre || '').trim().toUpperCase();
+    if (row.asociado_dni && name) nameToDNI[name] ||= row.asociado_dni;
+  }
   const grouped = data.reduce<Record<string, any>>((acc, row) => {
-    const key = row.asociado_dni || (row.asociado_nombre || '').trim().toUpperCase() || `unknown-${row.id}`;
+    const name = (row.asociado_nombre || '').trim().toUpperCase();
+    const dni = row.asociado_dni || nameToDNI[name] || '';
+    const key = dni || name || `unknown-${row.id}`;
     if (!acc[key]) {
-      acc[key] = { ...row, students: [] };
+      acc[key] = { ...row, asociado_dni: dni, students: [] };
     }
-    acc[key].students.push({
-      estudiante: row.estudiante,
-      grado: row.grado,
-      seccion: row.seccion,
-    });
+    const sKey = `${row.estudiante || ''}|${row.grado || ''}|${row.seccion || ''}`;
+    if (!acc[key]._seen) acc[key]._seen = new Set<string>();
+    if (!acc[key]._seen.has(sKey)) {
+      acc[key]._seen.add(sKey);
+      acc[key].students.push({
+        estudiante: row.estudiante,
+        grado: row.grado,
+        seccion: row.seccion,
+      });
+    }
     return acc;
   }, {});
   const groupedData = Object.values(grouped);

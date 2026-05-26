@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { supabase } from '../../lib/supabase';
 import { asistenciaService } from '../../services/asistenciaService';
 import { Download, Users, Calendar, AlertTriangle, Trash2, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 
@@ -20,6 +21,7 @@ export default function AsistenciaTab() {
   const [showCrear, setShowCrear] = useState(false);
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [nuevaFecha, setNuevaFecha] = useState(new Date().toISOString().slice(0, 10));
+  const [attendanceMap, setAttendanceMap] = useState<Map<number, number>>(new Map()); // padre_id -> attendance id
 
   const cargarEventos = async () => {
     const res = await asistenciaService.obtenerEventos();
@@ -39,7 +41,7 @@ export default function AsistenciaTab() {
     setError('');
 
     const [resAsistencias, resInasistentes] = await Promise.all([
-      asistenciaService.obtenerAsistencias({ evento_id: eventoSeleccionado, page, pageSize: PAGE_SIZE }),
+      asistenciaService.obtenerAsistencias({ evento_id: eventoSeleccionado }), // sin paginacion
       asistenciaService.exportarInasistentes(eventoSeleccionado),
     ]);
 
@@ -52,6 +54,19 @@ export default function AsistenciaTab() {
       setTotalAsistieron(resInasistentes.totalAsistieron || 0);
       setTotalPadres(resInasistentes.totalPadres || 0);
     }
+
+    // map padre_id -> attendance id para poder eliminar
+    const map = new Map<number, number>();
+    if (resAsistencias.data) {
+      const { data: raw } = await supabase
+        .from('asistencias')
+        .select('id, padre_id')
+        .eq('evento_id', eventoSeleccionado);
+      for (const r of raw || []) {
+        if (!map.has(r.padre_id)) map.set(r.padre_id, r.id);
+      }
+    }
+    setAttendanceMap(map);
 
     setLoading(false);
   };
@@ -94,17 +109,21 @@ export default function AsistenciaTab() {
     URL.revokeObjectURL(url);
   };
 
-  const totalPages = Math.ceil(totalAsistieron / PAGE_SIZE);
-
-  // Combinar asistencias + inasistentes para la tabla filtrada
+  // Combinar y ordenar todos los padres
   const tablaCompleta = [
     ...asistencias.map((a: any) => ({ ...a, _estado: 'asistio' as const })),
     ...inasistentes.map((i: any) => ({ ...i, _estado: 'falta' as const })),
-  ].filter(r => {
-    if (filtro === 'asistio') return r._estado === 'asistio';
-    if (filtro === 'falta') return r._estado === 'falta';
-    return true;
-  });
+  ]
+    .filter(r => {
+      if (filtro === 'asistio') return r._estado === 'asistio';
+      if (filtro === 'falta') return r._estado === 'falta';
+      return true;
+    })
+    .sort((a, b) => (a.asociado_nombre || '').localeCompare(b.asociado_nombre || ''));
+
+  const totalFiltered = tablaCompleta.length;
+  const totalPages = Math.ceil(totalFiltered / PAGE_SIZE);
+  const paginaActual = tablaCompleta.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   const eventoActual = eventos.find(e => e.id === eventoSeleccionado);
 
@@ -226,11 +245,14 @@ export default function AsistenciaTab() {
       {/* FILTROS Y EXPORTAR */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+            <span className="hidden sm:inline">Filtrar:</span>
+          </div>
           <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
             {(['todos', 'asistio', 'falta'] as Filtro[]).map(f => (
               <button
                 key={f}
-                onClick={() => setFiltro(f)}
+                onClick={() => { setFiltro(f); setPage(0); }}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase transition-all ${
                   filtro === f
                     ? f === 'asistio' ? 'bg-green-500 text-white shadow'
@@ -265,14 +287,14 @@ export default function AsistenciaTab() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {tablaCompleta.length === 0 && (
+              {paginaActual.length === 0 && (
                 <tr>
                   <td colSpan={6} className="p-10 text-center text-slate-500">
                     No hay registros para este evento.
                   </td>
                 </tr>
               )}
-              {tablaCompleta.map((p: any) => (
+              {paginaActual.map((p: any) => (
                 <tr key={p.asociado_dni || p.id} className={`transition-colors ${
                   p._estado === 'asistio' ? 'hover:bg-green-50/50' : 'hover:bg-red-50/50'
                 }`}>
@@ -305,7 +327,7 @@ export default function AsistenciaTab() {
                   <td className="px-4 py-3 text-center">
                     {p._estado === 'asistio' && (
                       <button
-                        onClick={() => eliminar(p.id)}
+                        onClick={() => eliminar(attendanceMap.get(p.padre_id) || p.id)}
                         className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
                         title="Eliminar asistencia"
                       >
@@ -322,7 +344,7 @@ export default function AsistenciaTab() {
         {/* PAGINACIÓN */}
         <div className="p-4 border-t border-slate-100 flex justify-between items-center">
           <span className="text-sm text-slate-600">
-            Página {page + 1} de {totalPages || 1} ({totalAsistieron} asistieron)
+            Página {page + 1} de {totalPages || 1} ({totalFiltered} registros)
           </span>
           <div className="flex gap-2">
             <button

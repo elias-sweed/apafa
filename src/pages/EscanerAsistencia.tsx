@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { CheckCircle2, QrCode, AlertTriangle, Info } from 'lucide-react';
+import { QrCode } from 'lucide-react';
 import { asistenciaService } from '../services/asistenciaService';
 
 export default function EscanerAsistencia() {
@@ -69,9 +69,7 @@ export default function EscanerAsistencia() {
     iniciarCamara();
 
     return () => {
-      if (html5QrCode.isScanning) {
-        html5QrCode.stop().catch(console.error);
-      }
+      try { html5QrCode.stop().catch(() => {}); } catch {}
     };
   }, [escaneando, eventoSeleccionado]);
 
@@ -114,52 +112,55 @@ export default function EscanerAsistencia() {
         </div>
       )}
 
-      {/* RESULTADO */}
-      <div className="w-full max-w-sm mt-4 sm:mt-8">
-        {!resultado && eventoSeleccionado && (
-          <div className="text-center text-slate-400 animate-pulse text-sm sm:text-base">
-            <p>Apunte la cámara hacia el código QR</p>
-          </div>
-        )}
+      {/* PANTALLA COMPLETA DE RESULTADO */}
+      {resultado && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center animate-fade-in"
+          style={resultado.estado === 'exito' ? { backgroundColor: 'rgba(22, 163, 74, 0.95)' } :
+                 resultado.estado === 'duplicado' ? { backgroundColor: 'rgba(234, 179, 8, 0.95)' } :
+                 { backgroundColor: 'rgba(220, 38, 38, 0.95)' }}
+        >
+          {resultado.estado === 'exito' && (
+            <>
+              <svg className="text-white mb-6" width={80} height={80} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              <h1 className="text-white font-black text-6xl sm:text-7xl uppercase tracking-widest mb-6">Asistió</h1>
+              <p className="text-white/80 text-lg sm:text-xl font-medium mb-4">{resultado.hora}</p>
+              <div className="bg-white/20 backdrop-blur rounded-2xl px-8 py-5 text-center max-w-sm w-full mx-4">
+                <p className="text-white font-bold text-xl sm:text-2xl uppercase">{resultado.padre?.asociado_nombre}</p>
+                {resultado.grados && (
+                  <p className="text-white/80 font-semibold text-base mt-2">{resultado.grados}</p>
+                )}
+              </div>
+            </>
+          )}
 
-        {!eventoSeleccionado && (
-          <div className="text-center text-slate-500 text-sm sm:text-base">
-            <p>Selecciona o crea un evento para empezar</p>
-          </div>
-        )}
+          {resultado.estado === 'duplicado' && (
+            <>
+              <svg className="text-white mb-6" width={80} height={80} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <h1 className="text-white font-black text-5xl sm:text-6xl uppercase tracking-widest mb-4">Ya escaneado</h1>
+              <p className="text-white/80 text-lg sm:text-xl font-medium">{resultado.mensaje}</p>
+            </>
+          )}
 
-        {resultado?.estado === 'exito' && (
-          <div className="bg-green-50 border-2 border-green-500 rounded-2xl p-4 sm:p-5 shadow-lg animate-fade-in text-center mx-2 sm:mx-0">
-            <CheckCircle2 className="text-green-600 mx-auto mb-2" size={40} />
-            <h2 className="text-green-800 font-black text-xl sm:text-2xl uppercase tracking-wide">Asistió</h2>
-            <p className="text-green-600 text-xs sm:text-sm font-medium mb-3">{resultado.hora}</p>
-            <div className="bg-white rounded-xl p-3 space-y-1 border border-green-200">
-              <p className="text-xs sm:text-sm font-bold text-slate-800 uppercase">{resultado.padre?.asociado_nombre}</p>
-              {resultado.grados && (
-                <p className="text-xs font-bold text-blue-700">{resultado.grados}</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {resultado?.estado === 'duplicado' && (
-          <div className="bg-yellow-50 border-2 border-yellow-500 rounded-2xl p-4 sm:p-5 shadow-lg animate-fade-in text-center mx-2 sm:mx-0">
-            <Info className="text-yellow-600 mx-auto mb-2" size={36} />
-            <h2 className="text-yellow-800 font-black text-lg sm:text-xl uppercase">Ya escaneado</h2>
-            <p className="text-yellow-700 text-sm font-medium">{resultado.mensaje}</p>
-          </div>
-        )}
-
-        {resultado?.estado === 'error' && (
-          <div className="bg-red-50 border-2 border-red-500 rounded-2xl p-4 shadow-lg animate-fade-in flex items-center gap-4 mx-2 sm:mx-0">
-            <AlertTriangle className="text-red-600 shrink-0" size={28} />
-            <div>
-              <h2 className="text-red-800 font-bold text-sm sm:text-base">Error de lectura</h2>
-              <p className="text-red-700 text-xs sm:text-sm">{resultado.mensaje}</p>
-            </div>
-          </div>
-        )}
-      </div>
+          {resultado.estado === 'error' && (
+            <>
+              <svg className="text-white mb-6" width={80} height={80} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+              </svg>
+              <h1 className="text-white font-black text-4xl sm:text-5xl uppercase tracking-widest mb-4">Error</h1>
+              <p className="text-white/80 text-lg font-medium">{resultado.mensaje}</p>
+            </>
+          )}
+        </div>
+      )}
 
     </div>
   );

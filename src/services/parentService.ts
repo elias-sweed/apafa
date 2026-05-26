@@ -34,16 +34,27 @@ export const parentService = {
   },
 
   async getStats() {
-    const { data, error } = await supabase
+    const { count: totalRows } = await supabase
       .from('padron_general')
-      .select('asociado_dni, asociado_nombre');
+      .select('*', { count: 'exact', head: true });
 
-    if (error) return { error, totalEstudiantes: 0, totalAsociados: 0, sinDNI: 0 };
+    let all: any[] = [];
+    let from = 0;
+    const pageSize = 1000;
+    while (true) {
+      const { data } = await supabase
+        .from('padron_general')
+        .select('asociado_dni, asociado_nombre')
+        .range(from, from + pageSize - 1);
+      if (!data || data.length === 0) break;
+      all = all.concat(data);
+      from += pageSize;
+    }
 
     const unique = new Map<string, any>();
     let sinDNI = 0;
-    for (const row of data || []) {
-      const key = row.asociado_dni || row.asociado_nombre || `unknown`;
+    for (const row of all) {
+      const key = row.asociado_dni || (row.asociado_nombre || '').trim().toUpperCase() || `unknown`;
       if (!unique.has(key)) {
         unique.set(key, row);
         if (!row.asociado_dni) sinDNI++;
@@ -51,7 +62,7 @@ export const parentService = {
     }
     return {
       error: null,
-      totalEstudiantes: data?.length || 0,
+      totalEstudiantes: totalRows || all.length,
       totalAsociados: unique.size,
       sinDNI,
     };

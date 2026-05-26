@@ -118,22 +118,50 @@ export const asistenciaService = {
 
       if (evento_id) query = query.eq('evento_id', evento_id);
 
+      let asistencias: any[];
+      let count: number | null;
+
       if (page !== undefined && pageSize !== undefined) {
         const from = page * pageSize;
         const to = from + pageSize - 1;
-        query = query.range(from, to);
+        const res = await query.range(from, to);
+        if (res.error) return { error: 'Error al cargar asistencias.', data: [], count: 0 };
+        asistencias = res.data || [];
+        count = res.count;
+      } else {
+        let all: any[] = [];
+        let from = 0;
+        const ps = 1000;
+        while (true) {
+          const res = await supabase
+            .from('asistencias')
+            .select('*')
+            .order('id', { ascending: false })
+            .eq('evento_id', evento_id!)
+            .range(from, from + ps - 1);
+          if (res.error) return { error: 'Error al cargar asistencias.', data: [], count: 0 };
+          if (!res.data || res.data.length === 0) break;
+          all = all.concat(res.data);
+          from += ps;
+        }
+        asistencias = all;
+        count = asistencias.length;
       }
 
-      const { data: asistencias, error, count } = await query;
-      if (error) return { error: 'Error al cargar asistencias.', data: [], count: 0 };
-
       const ids = [...new Set(asistencias?.map(a => a.padre_id).filter(Boolean) || [])];
-      const { data: padres } = await supabase
-        .from('padron_general')
-        .select('*')
-        .in('id', ids);
 
-      const padresPorId = new Map(padres?.map(p => [p.id, p]) || []);
+      let padresData: any[] = [];
+      if (ids.length > 0) {
+        from = 0;
+        while (true) {
+          const batch = ids.slice(from, from + 200);
+          if (batch.length === 0) break;
+          const { data } = await supabase.from('padron_general').select('*').in('id', batch);
+          if (data) padresData = padresData.concat(data);
+          from += 200;
+        }
+      }
+      const padresPorId = new Map(padresData?.map(p => [p.id, p]) || []);
 
       const map = new Map<string, any>();
       for (const row of asistencias || []) {
@@ -145,7 +173,6 @@ export const asistenciaService = {
             padre_id: row.padre_id,
             asociado_nombre: p?.asociado_nombre || '',
             asociado_dni: p?.asociado_dni || '',
-            created_at: row.created_at,
             evento_id: row.evento_id,
             hijos: [],
           });
@@ -192,15 +219,23 @@ export const asistenciaService = {
 
       const idsAsistieron = new Set(asistencias?.map(a => a.padre_id) || []);
 
-      const { data: padron, error: errPadron } = await supabase
-        .from('padron_general')
-        .select('id, asociado_dni, asociado_nombre, estudiante, grado, seccion, nivel');
-
-      if (errPadron) return { error: 'Error al cargar el padrón.', data: [] };
+      let allPadron: any[] = [];
+      let from = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data, error: err } = await supabase
+          .from('padron_general')
+          .select('id, asociado_dni, asociado_nombre, estudiante, grado, seccion, nivel')
+          .range(from, from + pageSize - 1);
+        if (err) return { error: 'Error al cargar el padrón.', data: [] };
+        if (!data || data.length === 0) break;
+        allPadron = allPadron.concat(data);
+        from += pageSize;
+      }
 
       const padresMap = new Map<string, any>();
-      for (const row of padron || []) {
-        const key = row.asociado_dni || row.asociado_nombre || `unknown`;
+      for (const row of allPadron || []) {
+        const key = row.asociado_dni || (row.asociado_nombre || '').trim().toUpperCase() || `unknown`;
         if (!padresMap.has(key)) {
           padresMap.set(key, {
             asociado_nombre: row.asociado_nombre,

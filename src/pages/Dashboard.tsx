@@ -172,7 +172,7 @@ export default function Dashboard() {
         {/* VISTA 2: PESTAÑA DE QRS */}
         {activeTab === 'qrs' && (
           <div className="bg-transparent rounded-xl">
-            <QRSynchronizedTab data={data} loading={loading} />
+            <QRSynchronizedTab data={data} loading={loading} pageOffset={filters.page * pageSize} />
           </div>
         )}
 

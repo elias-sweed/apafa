@@ -2,7 +2,7 @@ import { Printer, CreditCard } from 'lucide-react';
 import { useState } from 'react';
 import CarnetPrint from './CarnetPrint';
 
-export default function QRSynchronizedTab({ data, loading }: { data: any[], loading: boolean }) {
+export default function QRSynchronizedTab({ data, loading, pageOffset = 0 }: { data: any[], loading: boolean, pageOffset?: number }) {
   // Estado para saber si imprimimos en A4 o en PVC
   const [printMode, setPrintMode] = useState<'a4' | 'pvc'>('a4');
 
@@ -62,7 +62,7 @@ export default function QRSynchronizedTab({ data, loading }: { data: any[], load
       {/* CONTENEDOR DE TARJETAS */}
       <div className={`gap-4 ${printMode === 'a4' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 print:grid print:grid-cols-2 print:gap-2' : 'grid grid-cols-1 sm:grid-cols-2 print:block'}`}>
         {groupedData.map((group: any, index: number) => (
-          <CarnetPrint key={group.id} parent={group} printMode={printMode} numero={index + 1} />
+          <CarnetPrint key={group.id} parent={group} printMode={printMode} numero={pageOffset + index + 1} />
         ))}
       </div>
 

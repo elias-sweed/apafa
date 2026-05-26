@@ -1,6 +1,18 @@
+import { useEffect, useState } from 'react';
 import { Users, QrCode, AlertCircle, ShieldCheck, ArrowRight } from 'lucide-react';
+import { parentService } from '../../services/parentService';
 
 export default function InicioTab({ setActiveTab }: { setActiveTab: (tab: string) => void }) {
+  const [stats, setStats] = useState({ totalEstudiantes: 0, totalAsociados: 0, sinDNI: 0 });
+
+  useEffect(() => {
+    parentService.getStats().then(res => {
+      if (!res.error) setStats({ totalEstudiantes: res.totalEstudiantes, totalAsociados: res.totalAsociados, sinDNI: res.sinDNI });
+    });
+  }, []);
+
+  const fmt = (n: number) => n.toLocaleString('en-US');
+
   return (
     <div className="space-y-8 animate-fade-in">
       
@@ -18,7 +30,7 @@ export default function InicioTab({ setActiveTab }: { setActiveTab: (tab: string
           </div>
           <div>
             <p className="text-sm text-slate-500 font-medium">Total Estudiantes</p>
-            <p className="text-2xl font-bold text-slate-800">1,240</p>
+            <p className="text-2xl font-bold text-slate-800">{fmt(stats.totalEstudiantes)}</p>
           </div>
         </div>
 
@@ -28,7 +40,7 @@ export default function InicioTab({ setActiveTab }: { setActiveTab: (tab: string
           </div>
           <div>
             <p className="text-sm text-slate-500 font-medium">Asociados Activos</p>
-            <p className="text-2xl font-bold text-slate-800">1,180</p>
+            <p className="text-2xl font-bold text-slate-800">{fmt(stats.totalAsociados)}</p>
           </div>
         </div>
 
@@ -37,8 +49,8 @@ export default function InicioTab({ setActiveTab }: { setActiveTab: (tab: string
             <QrCode size={32} />
           </div>
           <div>
-            <p className="text-sm text-slate-500 font-medium">Carnets Generados</p>
-            <p className="text-2xl font-bold text-slate-800">1,180</p>
+            <p className="text-sm text-slate-500 font-medium">Carnets a Generar</p>
+            <p className="text-2xl font-bold text-slate-800">{fmt(stats.totalAsociados)}</p>
           </div>
         </div>
 
@@ -48,7 +60,7 @@ export default function InicioTab({ setActiveTab }: { setActiveTab: (tab: string
           </div>
           <div>
             <p className="text-sm text-slate-500 font-medium">Faltan Datos (DNI)</p>
-            <p className="text-2xl font-bold text-slate-800">60</p>
+            <p className="text-2xl font-bold text-slate-800">{fmt(stats.sinDNI)}</p>
           </div>
         </div>
       </div>

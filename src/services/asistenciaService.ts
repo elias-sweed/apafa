@@ -200,7 +200,7 @@ export const asistenciaService = {
 
       const padresMap = new Map<string, any>();
       for (const row of padron || []) {
-        const key = row.asociado_dni || row.asociado_nombre || `sinid-${row.id}`;
+        const key = row.asociado_dni || row.asociado_nombre || `unknown`;
         if (!padresMap.has(key)) {
           padresMap.set(key, {
             asociado_nombre: row.asociado_nombre,

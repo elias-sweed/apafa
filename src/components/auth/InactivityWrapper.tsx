@@ -8,8 +8,8 @@ const WARNING_BEFORE = 60 * 1000; // avisar 1 minuto antes
 
 export default function InactivityWrapper({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
-  const warningRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const warningRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
@@ -22,7 +22,7 @@ export default function InactivityWrapper({ children }: { children: React.ReactN
     if (warningRef.current) clearTimeout(warningRef.current);
 
     warningRef.current = setTimeout(() => {
-      toast.warning('Sesión a punto de expirar por inactividad', { duration: WARNING_BEFORE / 1000 });
+      toast.warning('Sesión a punto de expirar por inactividad');
     }, INACTIVITY_TIMEOUT - WARNING_BEFORE);
 
     timerRef.current = setTimeout(logout, INACTIVITY_TIMEOUT);

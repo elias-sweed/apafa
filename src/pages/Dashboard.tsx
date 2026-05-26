@@ -149,7 +149,7 @@ export default function Dashboard() {
                           if (!groups.has(key)) groups.set(key, { rows: [], dni, displayName });
                           // Deduplicate students within a parent (same grado/seccion/estudiante)
                           const sKey = `${row.estudiante || ''}|${row.grado || ''}|${row.seccion || ''}`;
-                          const set = seenStudents.get(key)!;
+                          const set = seenStudents.get(key) || (seenStudents.set(key, new Set()), seenStudents.get(key)!);
                           if (!set.has(sKey)) { set.add(sKey); groups.get(key)!.rows.push(row); }
                         }
                         return Array.from(groups.entries()).map(([key, group]) => (

@@ -121,8 +121,8 @@ export default function Dashboard() {
               ) : data.length === 0 ? (
                 <div className="p-20 text-center text-slate-500">No se encontraron resultados.</div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse min-w-max">
+                <div className="overflow-hidden">
+                  <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[11px] font-semibold tracking-wider">
                       <tr>
                         <th className="px-4 py-4">Hijos</th>
@@ -141,12 +141,13 @@ export default function Dashboard() {
                         }
                         return Array.from(groups.entries()).map(([key, rows]) => (
                           <tr key={key} className="hover:bg-blue-50/50 transition-colors">
-                            <td className="px-4 py-3">
-                              <div className="flex flex-wrap gap-1">
+                            <td className="px-4 py-3 align-top">
+                              <div className="space-y-1">
                                 {rows.map((r: any) => (
-                                  <span key={r.id} className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] font-medium">
-                                    {r.grado} "{r.seccion}" - {r.estudiante}
-                                  </span>
+                                  <div key={r.id} className="text-[11px] text-slate-700 leading-tight">
+                                    <span className="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-medium uppercase">{r.grado} "{r.seccion}"</span>
+                                    <span className="ml-1">{r.estudiante}</span>
+                                  </div>
                                 ))}
                               </div>
                             </td>

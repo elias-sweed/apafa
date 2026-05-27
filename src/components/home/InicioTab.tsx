@@ -7,7 +7,7 @@ export default function InicioTab({ setActiveTab }: { setActiveTab: (tab: string
     queryKey: ['stats'],
     queryFn: async () => {
       const res = await parentService.getStats();
-      if (res.error) throw new Error(res.error);
+      if (res.error) throw new Error(typeof res.error === 'string' ? res.error : 'Error al cargar estadisticas');
       return { totalEstudiantes: res.totalEstudiantes, totalAsociados: res.totalAsociados, sinDNI: res.sinDNI };
     },
     staleTime: 5 * 60 * 1000,

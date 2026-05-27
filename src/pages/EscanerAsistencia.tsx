@@ -14,7 +14,7 @@ export default function EscanerAsistencia() {
     queryKey: ['eventos'],
     queryFn: async () => {
       const res = await asistenciaService.obtenerEventos();
-      if (res.error) throw new Error(res.error);
+      if (res.error) throw new Error(typeof res.error === 'string' ? res.error : 'Error al cargar eventos');
       return res.data || [];
     },
   });
@@ -97,8 +97,8 @@ export default function EscanerAsistencia() {
           onChange={e => setEventoSeleccionado(Number(e.target.value))}
           className="w-full bg-slate-800 text-white rounded-xl px-4 py-3 text-sm font-medium border border-slate-700 focus:outline-none focus:border-blue-500"
         >
-          {eventos && eventos.length === 0 && <option value="">Sin eventos disponibles</option>}
-          {eventos.map(ev => (
+          {eventos?.length === 0 && <option value="">Sin eventos disponibles</option>}
+          {eventos?.map(ev => (
             <option key={ev.id} value={ev.id}>
               {ev.fecha?.slice(0, 10)} - {ev.nombre}
             </option>

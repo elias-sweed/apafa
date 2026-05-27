@@ -41,7 +41,7 @@ export default function Dashboard() {
         grado: filters.grado,
         incompleto: filters.incompleto,
       });
-      if (res.error) throw new Error(res.error);
+      if (res.error) throw new Error(typeof res.error === 'string' ? res.error : 'Error al cargar datos');
       return res.data || [];
     },
     enabled: activeTab === 'padres' || activeTab === 'qrs',
@@ -50,7 +50,7 @@ export default function Dashboard() {
   const deleteMutation = useMutation({
     mutationFn: async ({ dni, name }: { dni: string; name: string }) => {
       const res = await parentService.deleteParent(dni, name);
-      if (res.error) throw new Error(res.error);
+      if (res.error) throw new Error(typeof res.error === 'string' ? res.error : 'Error al eliminar');
     },
     onSuccess: () => {
       toast.success('Eliminado correctamente');

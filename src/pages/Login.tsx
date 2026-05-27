@@ -24,7 +24,7 @@ export default function Login() {
   });
 
   // 2. VERIFICAR SI YA ESTÁ LOGUEADO (Para no pedir clave a cada rato)
-  const { isFetched } = useQuery({
+  useQuery({
     queryKey: ['session'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();

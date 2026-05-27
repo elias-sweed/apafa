@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Lock, Mail, Loader2 } from 'lucide-react';
@@ -8,7 +9,6 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
 
   const navigate = useNavigate();
@@ -24,15 +24,15 @@ export default function Login() {
   });
 
   // 2. VERIFICAR SI YA ESTÁ LOGUEADO (Para no pedir clave a cada rato)
-  useEffect(() => {
-    const checkUser = async () => {
+  const { isFetched } = useQuery({
+    queryKey: ['session'],
+    queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate('/dashboard'); // Si ya tiene sesión, lo pateamos al panel
-      }
-    };
-    checkUser();
-  }, [navigate]);
+      if (session) navigate('/dashboard');
+      return session;
+    },
+    staleTime: 60 * 1000,
+  });
 
   // 3. LÓGICA DEL TEMPORIZADOR DE BLOQUEO
   useEffect(() => {
@@ -57,55 +57,47 @@ export default function Login() {
     return () => clearInterval(interval);
   }, [lockUntil]);
 
-  // 4. FUNCIÓN DE LOGIN BLINDADA
+  // 4. FUNCIÓN DE LOGIN BLINDADA (con useMutation)
+  const loginMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      localStorage.removeItem('apafa_login_attempts');
+      localStorage.removeItem('apafa_lock_until');
+      toast.success("¡Bienvenido al sistema de control!");
+      navigate('/dashboard');
+    },
+    onError: (error: any) => {
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      localStorage.setItem('apafa_login_attempts', newAttempts.toString());
+      
+      if (newAttempts >= 3) {
+        const lockTime = Date.now() + 10 * 60 * 1000;
+        setLockUntil(lockTime);
+        localStorage.setItem('apafa_lock_until', lockTime.toString());
+        toast.error("Demasiados intentos fallidos. Sistema bloqueado por 10 minutos.");
+      } else if (error.message?.includes('rate limit')) {
+        toast.error("Bloqueo de seguridad del servidor. Intente más tarde.");
+      } else {
+        toast.error(`Credenciales incorrectas. Intentos restantes: ${3 - newAttempts}`);
+      }
+    },
+  });
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validación extra: Si está bloqueado, ni siquiera intentamos llamar a la BD
     if (lockUntil && Date.now() < lockUntil) {
       toast.error(`Sistema bloqueado. Espera ${Math.ceil((lockUntil - Date.now()) / 1000)} segundos.`);
       return;
     }
-
-    setLoading(true);
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      // Manejo de error y aumento de intentos
-      const newAttempts = attempts + 1;
-      setAttempts(newAttempts);
-      localStorage.setItem('apafa_login_attempts', newAttempts.toString()); // Guardamos en memoria dura
-      
-      if (newAttempts >= 3) {
-        const lockTime = Date.now() + 10 * 60 * 1000; // 10 minutos en el futuro
-        setLockUntil(lockTime);
-        localStorage.setItem('apafa_lock_until', lockTime.toString()); // Guardamos el castigo
-        toast.error("Demasiados intentos fallidos. Sistema bloqueado por 10 minutos.");
-      } else {
-        // Si el error es de Supabase por Rate Limit (muchos intentos a nivel servidor)
-        if (error.message.includes('rate limit')) {
-           toast.error("Bloqueo de seguridad del servidor. Intente más tarde.");
-        } else {
-           toast.error(`Credenciales incorrectas. Intentos restantes: ${3 - newAttempts}`);
-        }
-      }
-      setLoading(false);
-      return;
-    }
-
-    // SI EL LOGIN ES EXITOSO: Limpiamos historial de errores
-    localStorage.removeItem('apafa_login_attempts');
-    localStorage.removeItem('apafa_lock_until');
-    
-    toast.success("¡Bienvenido al sistema de control!");
-    navigate('/dashboard');
+    loginMutation.mutate();
   };
 
-  // Convertimos los segundos en un formato bonito (MM:SS) para el usuario
+  const isLoading = loginMutation.isPending;
+
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
     const s = (seconds % 60).toString().padStart(2, '0');
@@ -162,13 +154,13 @@ export default function Login() {
 
           <button 
             type="submit" 
-            disabled={loading || !!lockUntil}
+            disabled={isLoading || !!lockUntil}
             className={`w-full font-bold py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2
               ${lockUntil 
                 ? 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 cursor-not-allowed' 
                 : 'bg-blue-600 hover:bg-blue-700 text-white active:scale-[0.98]'}`}
           >
-            {loading && !lockUntil ? <Loader2 className="animate-spin" /> : null}
+            {isLoading && !lockUntil ? <Loader2 className="animate-spin" /> : null}
             {lockUntil ? `Bloqueado por ${formatTime(timeLeft)}` : 'Entrar al Sistema'}
           </button>
         </form>

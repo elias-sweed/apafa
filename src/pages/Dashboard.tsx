@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Sidebar from '../components/Sidebar';
 import FilterBar from '../components/parents/FilterBar';
 import EditModal from '../components/parents/EditModal';
@@ -13,9 +14,8 @@ import { toast } from 'sonner';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('inicio');
-  const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  
+  const queryClient = useQueryClient();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedParent, setSelectedParent] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -27,49 +27,50 @@ export default function Dashboard() {
     incompleto: false,
     page: 0
   });
-  
-  const pageSize = 100; 
 
-  const loadData = async () => {
-    setLoading(true);
-    const { data: padres, error } = await parentService.getParents({
-      page: filters.page,
-      pageSize,
-      searchTerm: filters.searchTerm,
-      nivel: filters.nivel,
-      grado: filters.grado,
-      incompleto: filters.incompleto
-    });
+  const pageSize = 100;
 
-    if (!error) setData(padres || []);
-    setLoading(false);
-  };
+  const { data, isLoading } = useQuery({
+    queryKey: ['parents', filters],
+    queryFn: async () => {
+      const res = await parentService.getParents({
+        page: filters.page,
+        pageSize,
+        searchTerm: filters.searchTerm,
+        nivel: filters.nivel,
+        grado: filters.grado,
+        incompleto: filters.incompleto,
+      });
+      if (res.error) throw new Error(res.error);
+      return res.data || [];
+    },
+    enabled: activeTab === 'padres' || activeTab === 'qrs',
+  });
 
-  useEffect(() => {
-    if (activeTab === 'padres' || activeTab === 'qrs') {
-      const delay = setTimeout(() => { loadData(); }, 300);
-      return () => clearTimeout(delay);
-    } else {
-      setLoading(false);
-    }
-  }, [filters, activeTab]);
+  const deleteMutation = useMutation({
+    mutationFn: async ({ dni, name }: { dni: string; name: string }) => {
+      const res = await parentService.deleteParent(dni, name);
+      if (res.error) throw new Error(res.error);
+    },
+    onSuccess: () => {
+      toast.success('Eliminado correctamente');
+      queryClient.invalidateQueries({ queryKey: ['parents'] });
+    },
+    onError: () => toast.error('Error al eliminar'),
+  });
 
   const handleEdit = (parent: any) => {
     setSelectedParent(parent);
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (dni: string, name: string) => {
+  const handleDelete = (dni: string, name: string) => {
     const display = name || `DNI: ${dni}`;
     if (!confirm(`¿Eliminar a ${display} y todos sus hijos del padrón?`)) return;
-    const { error } = await parentService.deleteParent(dni, name);
-    if (error) {
-      toast.error('Error al eliminar');
-    } else {
-      toast.success('Eliminado correctamente');
-      loadData();
-    }
+    deleteMutation.mutate({ dni, name });
   };
+
+  const rows = data || [];
 
   return (
     <div className="flex bg-slate-50 min-h-screen print:bg-white">
@@ -141,9 +142,9 @@ export default function Dashboard() {
                   Agregar Padre
                 </button>
               </div>
-              {loading ? (
+              {isLoading ? (
                 <div className="w-full p-8 text-center text-slate-500 animate-pulse">Cargando datos...</div>
-              ) : data.length === 0 ? (
+              ) : rows.length === 0 ? (
                 <div className="p-20 text-center text-slate-500">No se encontraron resultados.</div>
               ) : (
                 <div className="overflow-hidden">
@@ -160,13 +161,13 @@ export default function Dashboard() {
                       {(() => {
                         // Build name -> DNI lookup so rows with same name but missing DNI still group together
                         const nameToDNI: Record<string, string> = {};
-                        for (const row of data) {
+                        for (const row of rows) {
                           const name = (row.asociado_nombre || '').trim().toUpperCase();
                           if (row.asociado_dni && name) nameToDNI[name] ||= row.asociado_dni;
                         }
                         const groups = new Map<string, { rows: any[]; dni: string; displayName: string }>();
                         const seenStudents = new Map<string, Set<string>>();
-                        for (const row of data) {
+                        for (const row of rows) {
                           const name = (row.asociado_nombre || '').trim().toUpperCase();
                           const displayName = (row.asociado_nombre || '').trim();
                           const dni = row.asociado_dni || nameToDNI[name] || '';
@@ -226,12 +227,12 @@ export default function Dashboard() {
               isOpen={isModalOpen} 
               onClose={() => setIsModalOpen(false)} 
               parent={selectedParent}
-              onSaved={loadData}
+              onSaved={() => queryClient.invalidateQueries({ queryKey: ['parents'] })}
             />
             <AddParentModal 
               isOpen={isAddModalOpen} 
               onClose={() => setIsAddModalOpen(false)} 
-              onSaved={loadData}
+              onSaved={() => queryClient.invalidateQueries({ queryKey: ['parents'] })}
             />
           </>
         )}
@@ -239,12 +240,12 @@ export default function Dashboard() {
         {/* VISTA 2: PESTAÑA DE QRS */}
         {activeTab === 'qrs' && (
           <div className="bg-transparent rounded-xl">
-            <QRSynchronizedTab data={data} loading={loading} pageOffset={filters.page * pageSize} />
+            <QRSynchronizedTab data={rows} loading={isLoading} pageOffset={filters.page * pageSize} />
           </div>
         )}
 
         {/* PAGINACIÓN - Solo si estamos en Padres o QRs */}
-        {(activeTab === 'padres' || activeTab === 'qrs') && !loading && data.length > 0 && (
+        {(activeTab === 'padres' || activeTab === 'qrs') && !isLoading && rows.length > 0 && (
           <div className="mt-6 p-4 bg-white shadow-sm rounded-xl border border-slate-200 flex justify-between items-center print:hidden">
             <span className="text-sm text-slate-600 font-medium">Mostrando página {filters.page + 1}</span>
             <div className="flex gap-2">
@@ -257,7 +258,7 @@ export default function Dashboard() {
               </button>
               <button 
                 onClick={() => setFilters(f => ({...f, page: f.page + 1}))}
-                disabled={data.length < pageSize}
+                disabled={rows.length < pageSize}
                 className="p-2 rounded hover:bg-slate-50 border border-slate-200 transition-all disabled:opacity-30"
               >
                 <ChevronRight size={20} />

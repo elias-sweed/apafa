@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { asistenciaService } from '../../services/asistenciaService';
 import { Download, Users, Calendar, AlertTriangle, Trash2, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
@@ -8,106 +9,100 @@ type Filtro = 'todos' | 'asistio' | 'falta';
 const PAGE_SIZE = 20;
 
 export default function AsistenciaTab() {
-  const [eventos, setEventos] = useState<any[]>([]);
+  const queryClient = useQueryClient();
   const [eventoSeleccionado, setEventoSeleccionado] = useState<number | null>(null);
-  const [asistencias, setAsistencias] = useState<any[]>([]);
-  const [inasistentes, setInasistentes] = useState<any[]>([]);
-  const [totalAsistieron, setTotalAsistieron] = useState(0);
-  const [totalPadres, setTotalPadres] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [filtro, setFiltro] = useState<Filtro>('todos');
   const [page, setPage] = useState(0);
   const [showCrear, setShowCrear] = useState(false);
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [nuevaFecha, setNuevaFecha] = useState(new Date().toISOString().slice(0, 10));
-  const [attendanceMap, setAttendanceMap] = useState<Map<number, number>>(new Map()); // padre_id -> attendance id
 
-  const cargarEventos = async () => {
-    const res = await asistenciaService.obtenerEventos();
-    if (res.data) {
-      setEventos(res.data);
-      if (res.data.length > 0) {
-        setEventoSeleccionado(res.data[0].id);
-      } else {
-        setLoading(false);
+  const { data: eventos, error: eventosError } = useQuery({
+    queryKey: ['eventos'],
+    queryFn: async () => {
+      const res = await asistenciaService.obtenerEventos();
+      if (res.error) throw new Error(res.error);
+      return res.data || [];
+    },
+  });
+
+  // Select first event once loaded
+  useEffect(() => {
+    if (eventos && eventos.length > 0 && !eventoSeleccionado) {
+      setEventoSeleccionado(eventos[0].id);
+    }
+  }, [eventos, eventoSeleccionado]);
+
+  const { data: asistenciasRaw, isLoading: loadingAsistencias, error: asistenciasError } = useQuery({
+    queryKey: ['asistencias', eventoSeleccionado],
+    queryFn: async () => {
+      if (!eventoSeleccionado) return { asistencias: [], inasistentes: [], totalAsistieron: 0, totalPadres: 0, attendanceMap: new Map<number, number>() };
+      const [resAsistencias, resInasistentes] = await Promise.all([
+        asistenciaService.obtenerAsistencias({ evento_id: eventoSeleccionado }),
+        asistenciaService.exportarInasistentes(eventoSeleccionado),
+      ]);
+      if (resAsistencias.error) throw new Error(resAsistencias.error);
+      if (resInasistentes.error) throw new Error(resInasistentes.error);
+
+      const map = new Map<number, number>();
+      if (resAsistencias.data) {
+        const { data: raw } = await supabase
+          .from('asistencias')
+          .select('id, padre_id')
+          .eq('evento_id', eventoSeleccionado);
+        for (const r of raw || []) {
+          if (!map.has(r.padre_id)) map.set(r.padre_id, r.id);
+        }
       }
-    }
-  };
 
-  const loadData = async () => {
-    if (!eventoSeleccionado) return;
-    setLoading(true);
-    setError('');
+      return {
+        asistencias: resAsistencias.data || [],
+        inasistentes: resInasistentes.data || [],
+        totalAsistieron: resInasistentes.totalAsistieron || 0,
+        totalPadres: resInasistentes.totalPadres || 0,
+        attendanceMap: map,
+      };
+    },
+    enabled: !!eventoSeleccionado,
+  });
 
-    const [resAsistencias, resInasistentes] = await Promise.all([
-      asistenciaService.obtenerAsistencias({ evento_id: eventoSeleccionado }), // sin paginacion
-      asistenciaService.exportarInasistentes(eventoSeleccionado),
-    ]);
-
-    if (resAsistencias.error) setError(resAsistencias.error);
-    else setAsistencias(resAsistencias.data || []);
-
-    if (resInasistentes.error) setError(resInasistentes.error);
-    else {
-      setInasistentes(resInasistentes.data || []);
-      setTotalAsistieron(resInasistentes.totalAsistieron || 0);
-      setTotalPadres(resInasistentes.totalPadres || 0);
-    }
-
-    // map padre_id -> attendance id para poder eliminar
-    const map = new Map<number, number>();
-    if (resAsistencias.data) {
-      const { data: raw } = await supabase
-        .from('asistencias')
-        .select('id, padre_id')
-        .eq('evento_id', eventoSeleccionado);
-      for (const r of raw || []) {
-        if (!map.has(r.padre_id)) map.set(r.padre_id, r.id);
-      }
-    }
-    setAttendanceMap(map);
-
-    setLoading(false);
-  };
-
-  useEffect(() => { cargarEventos(); }, []);
-
-  useEffect(() => { loadData(); }, [eventoSeleccionado, page]);
-
-  const crearEvento = async () => {
-    if (!nuevoNombre.trim()) return;
-    const res = await asistenciaService.crearEvento(nuevoNombre.trim(), nuevaFecha);
-    if (res.data) {
-      setEventos(prev => [res.data, ...prev]);
-      setEventoSeleccionado(res.data.id);
+  const createEventMutation = useMutation({
+    mutationFn: async () => {
+      if (!nuevoNombre.trim()) throw new Error('Nombre requerido');
+      const res = await asistenciaService.crearEvento(nuevoNombre.trim(), nuevaFecha);
+      if (res.error) throw new Error(res.error);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['eventos'] });
+      if (data) setEventoSeleccionado(data.id);
       setShowCrear(false);
       setNuevoNombre('');
-    }
-  };
+    },
+  });
 
-  const eliminar = async (id: number) => {
-    if (!confirm('¿Eliminar esta asistencia?')) return;
-    await asistenciaService.eliminarAsistencia(id);
-    loadData();
-  };
+  const deleteAttendanceMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await asistenciaService.eliminarAsistencia(id);
+      if (res.error) throw new Error(res.error);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['asistencias', eventoSeleccionado] }),
+  });
 
-  const exportarCSV = () => {
-    const headers = ['Apoderado', 'DNI', 'Hijos'];
-    const rows = inasistentes.map((p: any) => [
-      p.asociado_nombre,
-      p.asociado_dni,
-      p.hijos.map((h: any) => `${h.estudiante} (${h.grado} ${h.seccion})`).join('; '),
-    ]);
-    const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `inasistentes_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  const deleteEventMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await asistenciaService.eliminarEvento(id);
+      if (res.error) throw new Error(res.error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['eventos'] });
+      setEventoSeleccionado(null);
+    },
+  });
+
+  const data = asistenciasRaw || { asistencias: [], inasistentes: [], totalAsistieron: 0, totalPadres: 0, attendanceMap: new Map() };
+  const { asistencias, inasistentes, totalAsistieron, totalPadres, attendanceMap } = data;
+  const error = eventosError ? (eventosError as Error).message : asistenciasError ? (asistenciasError as Error).message : '';
 
   // Combinar y ordenar todos los padres
   const tablaCompleta = [
@@ -125,9 +120,26 @@ export default function AsistenciaTab() {
   const totalPages = Math.ceil(totalFiltered / PAGE_SIZE);
   const paginaActual = tablaCompleta.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  const eventoActual = eventos.find(e => e.id === eventoSeleccionado);
+  const eventoActual = eventos?.find(e => e.id === eventoSeleccionado);
 
-  if (loading && asistencias.length === 0 && inasistentes.length === 0) {
+  const exportarCSV = () => {
+    const headers = ['Apoderado', 'DNI', 'Hijos'];
+    const rows = inasistentes.map((p: any) => [
+      p.asociado_nombre,
+      p.asociado_dni,
+      p.hijos?.map((h: any) => `${h.estudiante} (${h.grado} ${h.seccion})`).join('; '),
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `inasistentes_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  if (loadingAsistencias && asistencias.length === 0 && inasistentes.length === 0) {
     return <div className="p-10 text-center text-slate-500 animate-pulse font-medium">Cargando asistencias...</div>;
   }
 
@@ -149,7 +161,7 @@ export default function AsistenciaTab() {
             onChange={e => { setEventoSeleccionado(Number(e.target.value)); setPage(0); }}
             className="flex-1 bg-slate-100 rounded-xl px-4 py-3 text-sm font-medium border border-slate-200 focus:outline-none focus:border-blue-500"
           >
-            {eventos.map(ev => (
+            {eventos?.map(ev => (
               <option key={ev.id} value={ev.id}>
                 {ev.fecha?.slice(0, 10)} - {ev.nombre}
               </option>
@@ -179,10 +191,11 @@ export default function AsistenciaTab() {
               className="w-full bg-white rounded-lg px-3 py-2 text-sm border border-slate-300 focus:outline-none focus:border-blue-500"
             />
             <button
-              onClick={crearEvento}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg text-sm transition-colors"
+              onClick={() => createEventMutation.mutate()}
+              disabled={createEventMutation.isPending}
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg text-sm transition-colors disabled:opacity-50"
             >
-              Crear Evento
+              {createEventMutation.isPending ? 'Creando...' : 'Crear Evento'}
             </button>
           </div>
         )}
@@ -192,15 +205,9 @@ export default function AsistenciaTab() {
             <Calendar size={14} />
             <span>{eventoActual.fecha?.slice(0, 10)} - {eventoActual.nombre}</span>
             <button
-              onClick={async () => {
+              onClick={() => {
                 if (!confirm(`¿Eliminar evento "${eventoActual.nombre}"?`)) return;
-                await asistenciaService.eliminarEvento(eventoActual.id);
-                setEventos(prev => prev.filter(e => e.id !== eventoActual.id));
-                setEventoSeleccionado(null);
-                setAsistencias([]);
-                setInasistentes([]);
-                setTotalAsistieron(0);
-                setTotalPadres(0);
+                deleteEventMutation.mutate(eventoActual.id);
               }}
               className="ml-auto p-1 text-red-400 hover:text-red-600 transition-colors"
               title="Eliminar evento"
@@ -327,7 +334,11 @@ export default function AsistenciaTab() {
                   <td className="px-4 py-3 text-center">
                     {p._estado === 'asistio' && (
                       <button
-                        onClick={() => eliminar(attendanceMap.get(p.padre_id) || p.id)}
+                        onClick={() => {
+                          const id = attendanceMap.get(p.padre_id) || p.id;
+                          if (!confirm('¿Eliminar esta asistencia?')) return;
+                          deleteAttendanceMutation.mutate(id);
+                        }}
                         className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
                         title="Eliminar asistencia"
                       >

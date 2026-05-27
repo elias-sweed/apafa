@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Html5Qrcode } from 'html5-qrcode';
 import { QrCode } from 'lucide-react';
 import { asistenciaService } from '../services/asistenciaService';
@@ -6,19 +7,23 @@ import { asistenciaService } from '../services/asistenciaService';
 export default function EscanerAsistencia() {
   const [resultado, setResultado] = useState<any>(null);
   const [escaneando, setEscaneando] = useState(true);
-  const [eventos, setEventos] = useState<any[]>([]);
   const [eventoSeleccionado, setEventoSeleccionado] = useState<number | null>(null);
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
 
-  const cargarEventos = async () => {
-    const res = await asistenciaService.obtenerEventos();
-    if (res.data && res.data.length > 0) {
-      setEventos(res.data);
-      if (!eventoSeleccionado) setEventoSeleccionado(res.data[0].id);
-    }
-  };
+  const { data: eventos } = useQuery({
+    queryKey: ['eventos'],
+    queryFn: async () => {
+      const res = await asistenciaService.obtenerEventos();
+      if (res.error) throw new Error(res.error);
+      return res.data || [];
+    },
+  });
 
-  useEffect(() => { cargarEventos(); }, []);
+  useEffect(() => {
+    if (eventos && eventos.length > 0 && !eventoSeleccionado) {
+      setEventoSeleccionado(eventos[0].id);
+    }
+  }, [eventos, eventoSeleccionado]);
 
   useEffect(() => {
     if (!eventoSeleccionado) return;
@@ -92,7 +97,7 @@ export default function EscanerAsistencia() {
           onChange={e => setEventoSeleccionado(Number(e.target.value))}
           className="w-full bg-slate-800 text-white rounded-xl px-4 py-3 text-sm font-medium border border-slate-700 focus:outline-none focus:border-blue-500"
         >
-          {eventos.length === 0 && <option value="">Sin eventos disponibles</option>}
+          {eventos && eventos.length === 0 && <option value="">Sin eventos disponibles</option>}
           {eventos.map(ev => (
             <option key={ev.id} value={ev.id}>
               {ev.fecha?.slice(0, 10)} - {ev.nombre}

@@ -19,13 +19,7 @@ export default function App() {
             </InactivityWrapper>
           </ProtectedRoute>
         } />
-        <Route path="/escanear" element={
-          <ProtectedRoute>
-            <InactivityWrapper>
-              <EscanerAsistencia />
-            </InactivityWrapper>
-          </ProtectedRoute>
-        } />
+        <Route path="/escanear" element={<EscanerAsistencia />} />
       </Routes>
     </BrowserRouter>
   );

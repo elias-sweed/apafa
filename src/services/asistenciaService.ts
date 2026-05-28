@@ -79,14 +79,22 @@ export const asistenciaService = {
         return { error: 'QR invalido: identificador de padre no numerico.' };
       }
 
+      // Verificar si ya existe asistencia para este padre en este evento
+      const { data: existente } = await supabase
+        .from('asistencias')
+        .select('id')
+        .eq('padre_id', padreId)
+        .eq('evento_id', eventoId)
+        .maybeSingle();
+      if (existente) {
+        return { error: 'DUPLICADO' };
+      }
+
       const { error: insertError } = await supabase
         .from('asistencias')
         .insert([{ padre_id: padreId, evento_id: eventoId }]);
 
       if (insertError) {
-        if (insertError.code === '23505') {
-          return { error: 'DUPLICADO' };
-        }
         return { error: 'Error al registrar en la base de datos.' };
       }
 

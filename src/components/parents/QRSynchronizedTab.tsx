@@ -43,6 +43,7 @@ export default function QRSynchronizedTab({ data, loading, pageOffset = 0 }: { d
         estudiante: row.estudiante,
         grado: row.grado,
         seccion: row.seccion,
+        nivel: row.nivel,
       });
     }
     return acc;
@@ -72,7 +73,7 @@ export default function QRSynchronizedTab({ data, loading, pageOffset = 0 }: { d
       </div>
 
       {/* CONTENEDOR DE TARJETAS */}
-      <div className={`gap-4 ${printMode === 'a4' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 print:grid print:grid-cols-2 print:gap-2' : 'grid grid-cols-1 sm:grid-cols-2 print:block'}`}>
+      <div className={`gap-4 ${printMode === 'a4' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 print:grid print:grid-cols-2 print:gap-1' : 'grid grid-cols-1 sm:grid-cols-2 print:block'}`}>
         {groupedData.map((group: any, index: number) => (
           <CarnetPrint key={group.id} parent={group} printMode={printMode} numero={pageOffset + index + 1} />
         ))}

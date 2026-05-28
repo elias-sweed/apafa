@@ -38,6 +38,7 @@ export default function QRTab({ data, loading }: { data: any[], loading: boolean
         estudiante: row.estudiante,
         grado: row.grado,
         seccion: row.seccion,
+        nivel: row.nivel,
       });
     }
     return acc;

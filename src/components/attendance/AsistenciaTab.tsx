@@ -27,12 +27,14 @@ export default function AsistenciaTab() {
     },
   });
 
-  // Select first event once loaded, and re-select if current event was deleted
+  // Select first event when loaded; reset to null when no events exist
   useEffect(() => {
     if (eventos && eventos.length > 0) {
       if (!eventoSeleccionado || !eventos.find(e => e.id === eventoSeleccionado)) {
         setEventoSeleccionado(eventos[0].id);
       }
+    } else if (eventos && eventoSeleccionado !== null) {
+      setEventoSeleccionado(null);
     }
   }, [eventos, eventoSeleccionado]);
 
@@ -116,10 +118,11 @@ export default function AsistenciaTab() {
       const res = await asistenciaService.eliminarEvento(id);
       if (res.error) throw new Error(res.error);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success('Evento eliminado');
-      queryClient.invalidateQueries({ queryKey: ['eventos'] });
-      setEventoSeleccionado(null);
+      await queryClient.invalidateQueries({ queryKey: ['eventos'] });
+      const updated = queryClient.getQueryData(['eventos']) as any[] | undefined;
+      setEventoSeleccionado(updated?.length ? updated[0].id : null);
     },
     onError: () => toast.error('Error al eliminar evento'),
   });

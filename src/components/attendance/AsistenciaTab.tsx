@@ -27,10 +27,12 @@ export default function AsistenciaTab() {
     },
   });
 
-  // Select first event once loaded
+  // Select first event once loaded, and re-select if current event was deleted
   useEffect(() => {
-    if (eventos && eventos.length > 0 && !eventoSeleccionado) {
-      setEventoSeleccionado(eventos[0].id);
+    if (eventos && eventos.length > 0) {
+      if (!eventoSeleccionado || !eventos.find(e => e.id === eventoSeleccionado)) {
+        setEventoSeleccionado(eventos[0].id);
+      }
     }
   }, [eventos, eventoSeleccionado]);
 

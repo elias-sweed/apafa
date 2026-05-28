@@ -87,8 +87,26 @@ export default function AsistenciaTab() {
       const res = await asistenciaService.eliminarAsistencia(id);
       if (res.error) throw new Error(res.error);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['asistencias', eventoSeleccionado] }),
-    onError: () => toast.error('Error al eliminar asistencia'),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['asistencias', eventoSeleccionado] });
+      const prev = queryClient.getQueryData(['asistencias', eventoSeleccionado]) as any;
+      if (prev) {
+        queryClient.setQueryData(['asistencias', eventoSeleccionado], {
+          ...prev,
+          asistencias: prev.asistencias.filter((a: any) => a.id !== id && a.padre_id !== id),
+          totalAsistieron: Math.max(0, prev.totalAsistieron - 1),
+        });
+      }
+      toast.success('Asistencia eliminada');
+      return { prev };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.prev) queryClient.setQueryData(['asistencias', eventoSeleccionado], context.prev);
+      toast.error('Error al eliminar asistencia');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['asistencias', eventoSeleccionado] });
+    },
   });
 
   const deleteEventMutation = useMutation({
@@ -97,6 +115,7 @@ export default function AsistenciaTab() {
       if (res.error) throw new Error(res.error);
     },
     onSuccess: () => {
+      toast.success('Evento eliminado');
       queryClient.invalidateQueries({ queryKey: ['eventos'] });
       setEventoSeleccionado(null);
     },

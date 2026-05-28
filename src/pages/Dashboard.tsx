@@ -48,15 +48,15 @@ export default function Dashboard() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async ({ dni, name }: { dni: string; name: string }) => {
-      const res = await parentService.deleteParent(dni, name);
+    mutationFn: async (ids: number[]) => {
+      const res = await parentService.deleteParent(ids);
       if (res.error) throw new Error(typeof res.error === 'string' ? res.error : 'Error al eliminar');
     },
     onSuccess: () => {
       toast.success('Eliminado correctamente');
       queryClient.invalidateQueries({ queryKey: ['parents'] });
     },
-    onError: () => toast.error('Error al eliminar'),
+    onError: (err) => toast.error('Error al eliminar: ' + (err as Error).message),
   });
 
   const handleEdit = (parent: any) => {
@@ -64,10 +64,10 @@ export default function Dashboard() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (dni: string, name: string) => {
-    const display = name || `DNI: ${dni}`;
+  const handleDelete = (rows: any[]) => {
+    const display = rows[0]?.asociado_nombre || `DNI: ${rows[0]?.asociado_dni || '?'}`;
     if (!confirm(`¿Eliminar a ${display} y todos sus hijos del padrón?`)) return;
-    deleteMutation.mutate({ dni, name });
+    deleteMutation.mutate(rows.map(r => r.id));
   };
 
   const rows = data || [];
@@ -206,7 +206,7 @@ export default function Dashboard() {
                                   <Pencil size={18} />
                                 </button>
                                 <button 
-                                  onClick={() => handleDelete(group.dni, group.displayName)}
+                                  onClick={() => handleDelete(group.rows)}
                                   className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                   title="Eliminar"
                                 >

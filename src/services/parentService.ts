@@ -68,11 +68,8 @@ export const parentService = {
     };
   },
 
-  async deleteParent(dni: string, name: string) {
-    const query = dni
-      ? supabase.from('padron_general').delete().eq('asociado_dni', dni)
-      : supabase.from('padron_general').delete().eq('asociado_nombre', name);
-    const { error } = await query;
+  async deleteParent(ids: number[]) {
+    const { error } = await supabase.from('padron_general').delete().in('id', ids);
     return { error };
   },
 

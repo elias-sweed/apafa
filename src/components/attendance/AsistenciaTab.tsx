@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { asistenciaService } from '../../services/asistenciaService';
 import { Download, Users, Calendar, AlertTriangle, Trash2, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 type Filtro = 'todos' | 'asistio' | 'falta';
 
@@ -87,6 +88,7 @@ export default function AsistenciaTab() {
       if (res.error) throw new Error(res.error);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['asistencias', eventoSeleccionado] }),
+    onError: () => toast.error('Error al eliminar asistencia'),
   });
 
   const deleteEventMutation = useMutation({
@@ -98,6 +100,7 @@ export default function AsistenciaTab() {
       queryClient.invalidateQueries({ queryKey: ['eventos'] });
       setEventoSeleccionado(null);
     },
+    onError: () => toast.error('Error al eliminar evento'),
   });
 
   const data = asistenciasRaw || { asistencias: [], inasistentes: [], totalAsistieron: 0, totalPadres: 0, attendanceMap: new Map() };

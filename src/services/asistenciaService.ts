@@ -48,6 +48,12 @@ export const asistenciaService = {
 
   eliminarEvento: async (id: number) => {
     try {
+      const { error: errAsist } = await supabase
+        .from('asistencias')
+        .delete()
+        .eq('evento_id', id);
+      if (errAsist) return { error: 'Error al eliminar asistencias del evento.' };
+
       const { error } = await supabase
         .from('eventos')
         .delete()

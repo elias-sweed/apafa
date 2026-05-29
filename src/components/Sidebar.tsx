@@ -26,9 +26,9 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
   ];
 
   return (
-    <div className="w-64 bg-slate-900 h-screen text-white flex flex-col fixed left-0 top-0">
-      <div className="p-6 border-b border-slate-800">
-        <h2 className="text-xl font-bold text-blue-400">APAFA Control</h2>
+    <div className="theme-sidebar">
+      <div className="theme-sidebar-header">
+        <h2 className="theme-sidebar-brand">APAFA Control</h2>
       </div>
       
       <nav className="flex-1 p-4 space-y-2">
@@ -36,8 +36,8 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-              activeTab === item.id ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+            className={`theme-sidebar-nav-item ${
+              activeTab === item.id ? 'theme-sidebar-nav-item-active' : ''
             }`}
           >
             <item.icon size={20} />
@@ -46,7 +46,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-slate-800 space-y-2">
+      <div className="theme-sidebar-footer">
         <button 
           onClick={() => navigate('/escanear')}
           className="w-full flex items-center gap-3 px-4 py-3 text-emerald-400 hover:bg-emerald-900/20 rounded-lg transition-colors"

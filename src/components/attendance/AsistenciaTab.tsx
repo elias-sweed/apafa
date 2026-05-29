@@ -167,26 +167,26 @@ export default function AsistenciaTab() {
   };
 
   if (loadingAsistencias && asistencias.length === 0 && inasistentes.length === 0) {
-    return <div className="p-10 text-center text-slate-500 animate-pulse font-medium">Cargando asistencias...</div>;
+    return <div className="p-10 theme-loading font-medium">Cargando asistencias...</div>;
   }
 
   return (
     <div className="space-y-6">
       {error && (
-        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 flex items-center gap-3 text-red-700">
+        <div className="bg-red-500/10 border-2 border-red-500/30 rounded-xl p-4 flex items-center gap-3 text-red-400">
           <AlertTriangle size={20} />
           <span className="text-sm font-medium">{error}</span>
         </div>
       )}
 
       {/* SELECTOR DE EVENTO */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-        <label className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1 block">Evento / Reunión</label>
+      <div className="theme-card p-4">
+        <label className="text-xs text-dash-text-muted font-bold uppercase tracking-wider mb-1 block">Evento / Reunión</label>
         <div className="flex gap-2">
           <select
             value={eventoSeleccionado || ''}
             onChange={e => { setEventoSeleccionado(Number(e.target.value)); setPage(0); }}
-            className="flex-1 bg-slate-100 rounded-xl px-4 py-3 text-sm font-medium border border-slate-200 focus:outline-none focus:border-blue-500"
+            className="flex-1 theme-input py-3 font-medium"
           >
             {eventos?.map(ev => (
               <option key={ev.id} value={ev.id}>
@@ -196,7 +196,7 @@ export default function AsistenciaTab() {
           </select>
           <button
             onClick={() => setShowCrear(!showCrear)}
-            className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl transition-colors"
+            className="theme-btn-primary p-3 rounded-xl"
             title="Nuevo Evento"
           >
             <Plus size={20} />
@@ -204,18 +204,18 @@ export default function AsistenciaTab() {
         </div>
 
         {showCrear && (
-          <div className="mt-2 bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-2">
+          <div className="mt-2 theme-inner-panel space-y-2">
             <input
               value={nuevoNombre}
               onChange={e => setNuevoNombre(e.target.value)}
               placeholder="Nombre del evento"
-              className="w-full bg-white rounded-lg px-3 py-2 text-sm border border-slate-300 focus:outline-none focus:border-blue-500"
+              className="theme-input"
             />
             <input
               type="date"
               value={nuevaFecha}
               onChange={e => setNuevaFecha(e.target.value)}
-              className="w-full bg-white rounded-lg px-3 py-2 text-sm border border-slate-300 focus:outline-none focus:border-blue-500"
+              className="theme-input"
             />
             <button
               onClick={() => createEventMutation.mutate()}
@@ -228,7 +228,7 @@ export default function AsistenciaTab() {
         )}
 
         {eventoActual && (
-          <div className="mt-2 flex items-center gap-2 text-slate-500 text-xs">
+          <div className="mt-2 flex items-center gap-2 text-dash-text-muted text-xs">
             <Calendar size={14} />
             <span>{eventoActual.fecha?.slice(0, 10)} - {eventoActual.nombre}</span>
             <button
@@ -247,42 +247,42 @@ export default function AsistenciaTab() {
 
       {/* TARJETAS DE RESUMEN */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="theme-stat-card">
           <div className="flex items-center gap-3">
-            <Calendar className="text-blue-600" size={28} />
+            <Calendar className="text-blue-400" size={28} />
             <div>
-              <p className="text-2xl font-bold text-slate-800">{totalAsistieron}</p>
-              <p className="text-sm text-slate-500">Asistieron</p>
+              <p className="text-2xl font-bold text-dash-text">{totalAsistieron}</p>
+              <p className="text-sm text-dash-text-muted">Asistieron</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="theme-stat-card">
           <div className="flex items-center gap-3">
-            <Users className="text-orange-600" size={28} />
+            <Users className="text-orange-400" size={28} />
             <div>
-              <p className="text-2xl font-bold text-slate-800">{inasistentes.length}</p>
-              <p className="text-sm text-slate-500">No Asistieron</p>
+              <p className="text-2xl font-bold text-dash-text">{inasistentes.length}</p>
+              <p className="text-sm text-dash-text-muted">No Asistieron</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="theme-stat-card">
           <div className="flex items-center gap-3">
-            <Users className="text-green-600" size={28} />
+            <Users className="text-green-400" size={28} />
             <div>
-              <p className="text-2xl font-bold text-slate-800">{totalPadres}</p>
-              <p className="text-sm text-slate-500">Total Padres</p>
+              <p className="text-2xl font-bold text-dash-text">{totalPadres}</p>
+              <p className="text-sm text-dash-text-muted">Total Padres</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* FILTROS Y EXPORTAR */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+      <div className="theme-card">
+        <div className="p-4 border-b border-dash-border flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs text-dash-text-muted font-medium">
             <span className="hidden sm:inline">Filtrar:</span>
           </div>
-          <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
+          <div className="flex gap-1 bg-dash-surface-muted rounded-lg p-1">
             {(['todos', 'asistio', 'falta'] as Filtro[]).map(f => (
               <button
                 key={f}
@@ -291,8 +291,8 @@ export default function AsistenciaTab() {
                   filtro === f
                     ? f === 'asistio' ? 'bg-green-500 text-white shadow'
                       : f === 'falta' ? 'bg-red-500 text-white shadow'
-                      : 'bg-blue-600 text-white shadow'
-                    : 'text-slate-500 hover:text-slate-800'
+                      : 'bg-dash-accent text-white shadow'
+                    : 'text-dash-text-muted hover:text-dash-text'
                 }`}
               >
                 {f === 'todos' ? 'Todos' : f === 'asistio' ? 'Asistieron' : 'Falta'}
@@ -310,7 +310,7 @@ export default function AsistenciaTab() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-max">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[11px] font-semibold tracking-wider">
+            <thead className="theme-table-head">
               <tr>
                 <th className="px-4 py-4">Apoderado</th>
                 <th className="px-4 py-4">DNI</th>
@@ -320,40 +320,40 @@ export default function AsistenciaTab() {
                 <th className="px-4 py-4 text-center">Acción</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="theme-table-divide">
               {paginaActual.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-10 text-center text-slate-500">
+                  <td colSpan={6} className="p-10 theme-empty">
                     No hay registros para este evento.
                   </td>
                 </tr>
               )}
               {paginaActual.map((p: any) => (
                 <tr key={p.padre_id ? `a-${p.padre_id}` : `f-${p.asociado_dni || p.asociado_nombre}`} className={`transition-colors ${
-                  p._estado === 'asistio' ? 'hover:bg-green-50/50' : 'hover:bg-red-50/50'
+                  p._estado === 'asistio' ? 'hover:bg-green-500/5' : 'hover:bg-red-500/5'
                 }`}>
-                  <td className="px-4 py-3 text-sm font-semibold text-slate-800 uppercase">
+                  <td className="px-4 py-3 text-sm font-semibold text-dash-text uppercase">
                     {p.asociado_nombre}
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-500">{p.asociado_dni}</td>
-                  <td className="px-4 py-3 text-sm text-slate-700">
+                  <td className="px-4 py-3 text-sm text-dash-text-muted">{p.asociado_dni}</td>
+                  <td className="px-4 py-3 text-sm text-dash-text-muted">
                     <div className="flex flex-wrap gap-1">
                       {p.hijos?.map((h: any, i: number) => (
                         <span key={i} className={`px-2 py-0.5 rounded text-[10px] font-medium ${
-                          p._estado === 'asistio' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+                          p._estado === 'asistio' ? 'bg-blue-500/15 text-blue-400' : 'bg-dash-surface-elevated text-dash-text-muted'
                         }`}>
                           {h.grado} "{h.seccion}"
                         </span>
                       ))}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-500">-
+                  <td className="px-4 py-3 text-sm text-dash-text-subtle">-
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                       p._estado === 'asistio'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-700'
+                        ? 'bg-green-500/15 text-green-400'
+                        : 'bg-red-500/15 text-red-400'
                     }`}>
                       {p._estado === 'asistio' ? 'Asistió' : 'Falta'}
                     </span>
@@ -366,7 +366,7 @@ export default function AsistenciaTab() {
                           if (!confirm('¿Eliminar esta asistencia?')) return;
                           deleteAttendanceMutation.mutate(id);
                         }}
-                        className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
+                        className="theme-btn-icon-delete"
                         title="Eliminar asistencia"
                       >
                         <Trash2 size={16} />
@@ -380,22 +380,22 @@ export default function AsistenciaTab() {
         </div>
 
         {/* PAGINACIÓN */}
-        <div className="p-4 border-t border-slate-100 flex justify-between items-center">
-          <span className="text-sm text-slate-600">
+        <div className="p-4 border-t border-dash-border flex justify-between items-center">
+          <span className="text-sm text-dash-text-muted">
             Página {page + 1} de {totalPages || 1} ({totalFiltered} registros)
           </span>
           <div className="flex gap-2">
             <button
               onClick={() => setPage(p => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="p-2 rounded hover:bg-slate-100 border border-slate-200 disabled:opacity-30 transition-all"
+              className="theme-btn-pagination"
             >
               <ChevronLeft size={20} />
             </button>
             <button
               onClick={() => setPage(p => (p + 1 < totalPages ? p + 1 : p))}
               disabled={page + 1 >= totalPages}
-              className="p-2 rounded hover:bg-slate-100 border border-slate-200 disabled:opacity-30 transition-all"
+              className="theme-btn-pagination"
             >
               <ChevronRight size={20} />
             </button>

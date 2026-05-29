@@ -16,7 +16,6 @@ export default function Login() {
 
   const navigate = useNavigate();
 
-  // 1. PERSISTENCIA DE ESTADOS
   const [attempts, setAttempts] = useState(() => {
     return parseInt(localStorage.getItem('apafa_login_attempts') || '0');
   });
@@ -26,7 +25,6 @@ export default function Login() {
     return storedLock ? parseInt(storedLock) : null;
   });
 
-  // 2. VERIFICAR SESIÓN
   useQuery({
     queryKey: ['session'],
     queryFn: async () => {
@@ -37,7 +35,6 @@ export default function Login() {
     staleTime: 60 * 1000,
   });
 
-  // 3. TEMPORIZADOR DE BLOQUEO
   useEffect(() => {
     if (!lockUntil) return;
     const interval = setInterval(() => {
@@ -55,7 +52,6 @@ export default function Login() {
     return () => clearInterval(interval);
   }, [lockUntil]);
 
-  // 4. MUTACIÓN DE LOGIN
   const loginMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -95,19 +91,11 @@ export default function Login() {
     return `${m}:${s}`;
   };
 
-  // Clase base para los inputs que corrige el fondo azul del navegador
-  const inputStyles = `
-    w-full pl-11 pr-4 py-3 bg-zinc-900/50 border rounded-xl outline-none transition-all 
-    focus:bg-zinc-800 text-white placeholder:text-zinc-600
-    autofill:shadow-[0_0_0_30px_#18181b_inset] 
-    autofill:text-fill-white
-    [color-scheme:dark]
-  `;
+  const inputClass = `${lockUntil ? 'auth-input auth-input-locked' : 'auth-input auth-input-normal'}`;
 
   return (
-    <div className="min-h-screen bg-[#030303] flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="auth-theme">
       
-      {/* Fondo Animado */}
       <div className="absolute inset-0 pointer-events-none">
         <LightRays
           raysOrigin="top-center"
@@ -126,9 +114,9 @@ export default function Login() {
         />
       </div>
 
-      <div className="relative z-10 bg-zinc-900/70 backdrop-blur-md p-8 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] w-full max-w-md border border-white/10">
+      <div className="auth-card">
         <div className="text-center mb-8 flex flex-col items-center">
-          <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 bg-zinc-800/50 shadow-inner border border-white/10 overflow-hidden p-2">
+          <div className="auth-logo-ring">
             <img src={logoSchool} alt="I.E. Jimenez Pimentel" className="w-full h-full object-contain" />
           </div>
           
@@ -150,28 +138,26 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-5">
-          {/* INPUT EMAIL */}
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
             <input 
               type="email" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={`${inputStyles} ${lockUntil ? 'border-red-900/50 text-zinc-500 cursor-not-allowed' : 'border-white/10 focus:ring-2 focus:ring-white/20'}`}
+              className={inputClass}
               placeholder="correo@ejemplo.com"
               required
               disabled={!!lockUntil}
             />
           </div>
 
-          {/* INPUT PASSWORD */}
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
             <input 
               type={showPassword ? "text" : "password"} 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`${inputStyles} ${lockUntil ? 'border-red-900/50 text-zinc-500 cursor-not-allowed' : 'border-white/10 focus:ring-2 focus:ring-white/20'}`}
+              className={inputClass}
               placeholder="Contraseña"
               required
               disabled={!!lockUntil}
@@ -186,14 +172,10 @@ export default function Login() {
             </button>
           </div>
 
-          {/* BOTÓN PRINCIPAL */}
           <button 
             type="submit" 
             disabled={loginMutation.isPending || !!lockUntil}
-            className={`w-full font-bold py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2
-              ${lockUntil 
-                ? 'bg-red-950/30 text-red-400 border border-red-900/50 cursor-not-allowed' 
-                : 'bg-white hover:bg-zinc-300 text-black active:scale-[0.98]'}`}
+            className={lockUntil ? 'auth-btn-locked w-full font-bold py-4 rounded-xl flex items-center justify-center gap-2' : 'auth-btn-primary'}
           >
             {loginMutation.isPending && !lockUntil ? <Loader2 className="animate-spin" /> : null}
             {lockUntil ? `Bloqueado: ${formatTime(timeLeft)}` : 'Entrar al Sistema'}

@@ -23,15 +23,15 @@ export default function QRSynchronizedTab({
   };
 
   if (loading) {
-    return <div className="p-10 text-center text-slate-500 animate-pulse font-medium">Cargando carnets...</div>;
+    return <div className="p-10 theme-loading font-medium">Cargando carnets...</div>;
   }
 
   if (data.length === 0) {
     return (
-      <div className="p-20 text-center text-slate-500 bg-white rounded-xl shadow-sm border border-slate-200">
+      <div className="p-20 theme-empty theme-card">
         {soloHoy ? (
           <>
-            <p className="font-medium text-slate-700 mb-2">No hay registros agregados hoy.</p>
+            <p className="font-medium text-dash-text mb-2">No hay registros agregados hoy.</p>
             <p className="text-sm">
               Importa un Excel o agrega padres manualmente; luego vuelve aquí para imprimir solo esos carnets.
             </p>
@@ -78,7 +78,7 @@ export default function QRSynchronizedTab({
       <div className="flex justify-end gap-4 mb-8 print:hidden sticky top-4 z-50">
         <button
           onClick={() => handlePrint('a4')}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg flex items-center gap-3 transition-all transform hover:scale-105 border-2 border-blue-400"
+          className="theme-btn-primary font-bold py-3 px-6 rounded-xl shadow-lg border-2 border-blue-400/50 transform hover:scale-105"
         >
           <Printer size={24} />
           <span className="text-lg">Imprimir en A4</span>
@@ -86,7 +86,7 @@ export default function QRSynchronizedTab({
         
         <button
           onClick={() => handlePrint('pvc')}
-          className="bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-6 rounded-xl shadow-lg flex items-center gap-3 transition-all transform hover:scale-105 border-2 border-slate-600"
+          className="bg-dash-surface-elevated hover:bg-dash-border text-white font-bold py-3 px-6 rounded-xl shadow-lg flex items-center gap-3 transition-all transform hover:scale-105 border-2 border-dash-border"
         >
           <CreditCard size={24} />
           <span className="text-lg">Imprimir en PVC</span>

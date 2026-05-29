@@ -47,49 +47,49 @@ export default function ParentFormFields({ formData, setFormData, numero }: Prop
           <span className="bg-yellow-500 text-black text-sm font-black px-3 py-1.5 rounded-lg shadow-sm">
             {formatParentNumero(numero)}
           </span>
-          <span className="ml-3 text-xs text-slate-500">Número de registro en el padrón</span>
+          <span className="ml-3 text-xs text-dash-text-muted">Número de registro en el padrón</span>
         </div>
       )}
 
       <div>
-        <h4 className="font-semibold text-slate-800 border-b pb-2 mb-3">Datos del Estudiante</h4>
+        <h4 className="theme-form-heading">Datos del Estudiante</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Grado</label>
+            <label className="theme-label">Grado</label>
             <input
               type="text"
               value={formData.grado}
               onChange={set('grado')}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 uppercase text-sm"
+              className="theme-input uppercase"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Sección</label>
+            <label className="theme-label">Sección</label>
             <input
               type="text"
               value={formData.seccion}
               onChange={set('seccion')}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 uppercase text-sm"
+              className="theme-input uppercase"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">DNI Estudiante</label>
+            <label className="theme-label">DNI Estudiante</label>
             <input
               type="text"
               maxLength={8}
               value={formData.dni_estudiante}
               onChange={(e) => setFormData({ ...formData, dni_estudiante: e.target.value.replace(/\D/g, '') })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="theme-input"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Nivel</label>
+            <label className="theme-label">Nivel</label>
             <select
               value={formData.nivel}
               onChange={set('nivel')}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="theme-input"
               required
             >
               <option value="">Seleccionar...</option>
@@ -99,21 +99,21 @@ export default function ParentFormFields({ formData, setFormData, numero }: Prop
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Estudiante</label>
+            <label className="theme-label">Estudiante</label>
             <input
               type="text"
               value={formData.estudiante}
               onChange={set('estudiante')}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 uppercase text-sm"
+              className="theme-input uppercase"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Sexo</label>
+            <label className="theme-label">Sexo</label>
             <select
               value={formData.sexo}
               onChange={set('sexo')}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="theme-input"
             >
               <option value="">Seleccionar...</option>
               <option value="M">Masculino</option>
@@ -124,61 +124,61 @@ export default function ParentFormFields({ formData, setFormData, numero }: Prop
       </div>
 
       <div>
-        <h4 className="font-semibold text-slate-800 border-b pb-2 mb-3">Apoderado</h4>
+        <h4 className="theme-form-heading">Apoderado</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-slate-700 mb-1">Nombre Completo</label>
+            <label className="theme-label">Nombre Completo</label>
             <input
               type="text"
               value={formData.asociado_nombre}
               onChange={set('asociado_nombre')}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 uppercase text-sm"
+              className="theme-input uppercase"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">DNI</label>
+            <label className="theme-label">DNI</label>
             <input
               type="text"
               maxLength={8}
               value={formData.asociado_dni}
               onChange={(e) => setFormData({ ...formData, asociado_dni: e.target.value.replace(/\D/g, '') })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="theme-input"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Teléfono</label>
+            <label className="theme-label">Teléfono</label>
             <input
               type="text"
               maxLength={9}
               value={formData.telefono}
               onChange={(e) => setFormData({ ...formData, telefono: e.target.value.replace(/\D/g, '') })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="theme-input"
             />
           </div>
         </div>
       </div>
 
       <div>
-        <h4 className="font-semibold text-slate-800 border-b pb-2 mb-3">Segundo Responsable (Opcional)</h4>
+        <h4 className="theme-form-heading">Segundo Responsable (Opcional)</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Nombre Completo</label>
+            <label className="theme-label">Nombre Completo</label>
             <input
               type="text"
               value={formData.segundo_responsable}
               onChange={set('segundo_responsable')}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 uppercase text-sm"
+              className="theme-input uppercase"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">DNI</label>
+            <label className="theme-label">DNI</label>
             <input
               type="text"
               maxLength={8}
               value={formData.segundo_dni}
               onChange={(e) => setFormData({ ...formData, segundo_dni: e.target.value.replace(/\D/g, '') })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="theme-input"
             />
           </div>
         </div>

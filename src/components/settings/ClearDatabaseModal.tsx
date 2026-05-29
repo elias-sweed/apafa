@@ -48,10 +48,10 @@ export default function ClearDatabaseModal({ isOpen, onClose, onConfirmDelete, c
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-        <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-red-50">
-          <div className="flex items-center gap-2 text-red-700">
+    <div className="theme-modal-overlay">
+      <div className="theme-modal max-w-md">
+        <div className="theme-modal-header bg-red-500/10">
+          <div className="flex items-center gap-2 text-red-400">
             <ShieldAlert size={22} />
             <h3 className="font-bold">Zona de peligro</h3>
           </div>
@@ -59,7 +59,7 @@ export default function ClearDatabaseModal({ isOpen, onClose, onConfirmDelete, c
             type="button"
             onClick={handleClose}
             disabled={clearing}
-            className="text-slate-400 hover:text-slate-700 disabled:opacity-40"
+            className="theme-modal-close disabled:opacity-40"
           >
             <X size={20} />
           </button>
@@ -67,12 +67,12 @@ export default function ClearDatabaseModal({ isOpen, onClose, onConfirmDelete, c
 
         {step === 'password' ? (
           <form onSubmit={handleVerifyPassword} className="p-5 space-y-4">
-            <p className="text-sm text-slate-600">
-              Para vaciar el padrón escribe la <strong>contraseña secreta</strong> configurada por el
+            <p className="text-sm text-dash-text-muted">
+              Para vaciar el padrón escribe la <strong className="text-dash-text">contraseña secreta</strong> configurada por el
               administrador.
             </p>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Contraseña secreta</label>
+              <label className="theme-label">Contraseña secreta</label>
               <input
                 type="password"
                 autoComplete="off"
@@ -81,24 +81,20 @@ export default function ClearDatabaseModal({ isOpen, onClose, onConfirmDelete, c
                   setPassword(e.target.value);
                   setPasswordError('');
                 }}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-red-500"
+                className="theme-input focus:ring-red-500"
                 placeholder="Contraseña"
                 required
                 autoFocus
               />
-              {passwordError && <p className="text-sm text-red-600 mt-1">{passwordError}</p>}
+              {passwordError && <p className="text-sm text-red-400 mt-1">{passwordError}</p>}
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg"
-              >
+              <button type="button" onClick={handleClose} className="theme-btn-ghost">
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-900"
+                className="px-4 py-2 bg-dash-surface-elevated text-dash-text font-medium rounded-lg hover:bg-dash-border transition-colors"
               >
                 Continuar
               </button>
@@ -106,8 +102,8 @@ export default function ClearDatabaseModal({ isOpen, onClose, onConfirmDelete, c
           </form>
         ) : (
           <div className="p-5 space-y-4">
-            <p className="text-sm text-slate-700">
-              <strong>¿Estás seguro?</strong> Se eliminarán <strong>todos</strong> los registros del
+            <p className="text-sm text-dash-text-muted">
+              <strong className="text-dash-text">¿Estás seguro?</strong> Se eliminarán <strong className="text-dash-text">todos</strong> los registros del
               padrón. Esta acción no se puede deshacer.
             </p>
             <div className="flex justify-end gap-2">
@@ -115,7 +111,7 @@ export default function ClearDatabaseModal({ isOpen, onClose, onConfirmDelete, c
                 type="button"
                 onClick={() => setStep('password')}
                 disabled={clearing}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg disabled:opacity-50"
+                className="theme-btn-ghost disabled:opacity-50"
               >
                 Atrás
               </button>

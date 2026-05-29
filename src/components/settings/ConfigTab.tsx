@@ -97,26 +97,26 @@ export default function ConfigTab() {
 
   return (
     <div className="space-y-8 animate-fade-in max-w-4xl mx-auto">
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="border-b border-slate-100 p-6 bg-slate-50 flex items-center gap-3">
-          <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+      <div className="theme-card">
+        <div className="theme-card-section-header">
+          <div className="p-2 bg-blue-500/15 text-blue-400 rounded-lg">
             <Database size={24} />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-800">Importar padrón desde Excel</h2>
-            <p className="text-sm text-slate-500">
+            <h2 className="text-xl font-bold text-dash-text">Importar padrón desde Excel</h2>
+            <p className="text-sm text-dash-text-muted">
               Carga masiva de estudiantes y apoderados a la base de datos
             </p>
           </div>
         </div>
 
         <div className="p-6 space-y-6">
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+          <div className="theme-inner-panel">
             <div className="flex items-start gap-3">
-              <FileSpreadsheet className="text-emerald-600 shrink-0 mt-0.5" size={22} />
+              <FileSpreadsheet className="text-emerald-400 shrink-0 mt-0.5" size={22} />
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-slate-800 mb-1">1. Descarga la plantilla</p>
-                <p className="text-sm text-slate-600 mb-3">
+                <p className="font-semibold text-dash-text mb-1">1. Descarga la plantilla</p>
+                <p className="text-sm text-dash-text-muted mb-3">
                   El Excel trae solo los encabezados vacíos. Complétalo con tus datos: Grado,
                   Sección, DNI Estudiante, Nivel, Estudiante, Sexo, Apoderado, DNI Apoderado,
                   Segundo Responsable, DNI Segundo Responsable y Teléfono.
@@ -134,7 +134,7 @@ export default function ConfigTab() {
           </div>
 
           <div>
-            <p className="font-semibold text-slate-800 mb-3">2. Sube el archivo completado</p>
+            <p className="font-semibold text-dash-text mb-3">2. Sube el archivo completado</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -156,27 +156,27 @@ export default function ConfigTab() {
               onDrop={onDrop}
               className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
                 importing
-                  ? 'border-slate-200 bg-slate-50 cursor-wait'
+                  ? 'border-dash-border bg-dash-surface-muted cursor-wait'
                   : dragOver
-                    ? 'border-blue-500 bg-blue-50 cursor-copy'
-                    : 'border-slate-300 hover:border-blue-500 hover:bg-blue-50 cursor-pointer'
+                    ? 'border-blue-500 bg-blue-500/10 cursor-copy'
+                    : 'border-dash-border hover:border-blue-500 hover:bg-blue-500/5 cursor-pointer'
               }`}
             >
               {importing ? (
                 <>
-                  <Loader2 size={48} className="mx-auto text-blue-500 mb-4 animate-spin" />
-                  <p className="text-slate-700 font-medium">Importando registros...</p>
+                  <Loader2 size={48} className="mx-auto text-blue-400 mb-4 animate-spin" />
+                  <p className="text-dash-text font-medium">Importando registros...</p>
                 </>
               ) : (
                 <>
                   <UploadCloud
                     size={48}
-                    className={`mx-auto mb-4 ${dragOver ? 'text-blue-500' : 'text-slate-400'}`}
+                    className={`mx-auto mb-4 ${dragOver ? 'text-blue-400' : 'text-dash-text-subtle'}`}
                   />
-                  <p className="text-slate-700 font-medium mb-1">
+                  <p className="text-dash-text font-medium mb-1">
                     Haz clic o arrastra tu archivo Excel (.xlsx)
                   </p>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-dash-text-muted">
                     Cada fila = un estudiante en el padrón (como al agregar uno manualmente)
                   </p>
                 </>
@@ -184,34 +184,34 @@ export default function ConfigTab() {
             </div>
           </div>
 
-          <div className="text-xs text-slate-500 space-y-1 border-t border-slate-100 pt-4">
+          <div className="text-xs text-dash-text-muted space-y-1 border-t border-dash-border-subtle pt-4">
             <p>
-              <strong>Nivel:</strong> INICIAL, PRIMARIA o SECUNDARIA (obligatorio)
+              <strong className="text-dash-text-muted">Nivel:</strong> INICIAL, PRIMARIA o SECUNDARIA (obligatorio)
             </p>
             <p>
-              <strong>Sexo:</strong> M o F (opcional)
+              <strong className="text-dash-text-muted">Sexo:</strong> M o F (opcional)
             </p>
             <p>
-              <strong>Obligatorios:</strong> Grado, Sección, Nivel, Estudiante y Apoderado
+              <strong className="text-dash-text-muted">Obligatorios:</strong> Grado, Sección, Nivel, Estudiante y Apoderado
             </p>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-red-200 overflow-hidden">
+      <div className="theme-card border-red-500/30">
         <div className="p-6 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-red-100 text-red-600 rounded-full">
+            <div className="p-3 bg-red-500/15 text-red-400 rounded-full">
               <ShieldAlert size={28} />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-800">Zona de peligro</h3>
-              <p className="text-sm text-slate-500">Borrar todos los registros del padrón (irreversible)</p>
+              <h3 className="text-lg font-bold text-dash-text">Zona de peligro</h3>
+              <p className="text-sm text-dash-text-muted">Borrar todos los registros del padrón (irreversible)</p>
               {!deleteConfigured && (
-                <p className="text-xs text-amber-700 mt-2 max-w-md">
-                  Falta configurar la contraseña: crea el archivo <code className="bg-amber-50 px-1 rounded">.env.local</code>{' '}
-                  en la raíz del proyecto con <code className="bg-amber-50 px-1 rounded">VITE_PADRON_DELETE_SECRET=tu_clave</code>{' '}
-                  y reinicia <code className="bg-amber-50 px-1 rounded">npm run dev</code>.
+                <p className="text-xs text-amber-400 mt-2 max-w-md">
+                  Falta configurar la contraseña: crea el archivo <code className="bg-amber-500/10 px-1 rounded">.env.local</code>{' '}
+                  en la raíz del proyecto con <code className="bg-amber-500/10 px-1 rounded">VITE_PADRON_DELETE_SECRET=tu_clave</code>{' '}
+                  y reinicia <code className="bg-amber-500/10 px-1 rounded">npm run dev</code>.
                 </p>
               )}
             </div>
@@ -226,7 +226,7 @@ export default function ConfigTab() {
               setClearModalOpen(true);
             }}
             disabled={clearing || importing || !deleteConfigured}
-            className="border border-red-500 text-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-50 transition-colors disabled:opacity-50"
+            className="border border-red-500/50 text-red-400 px-4 py-2 rounded-lg font-bold hover:bg-red-500/10 transition-colors disabled:opacity-50"
           >
             {clearing ? 'Borrando...' : 'Vaciar base de datos'}
           </button>

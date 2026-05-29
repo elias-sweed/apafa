@@ -38,11 +38,11 @@ export default function AddParentModal({ isOpen, onClose, onSaved }: any) {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
-        <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-slate-50 shrink-0">
-          <h3 className="font-bold text-slate-800">Agregar Nuevo Padre</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 transition-colors">
+    <div className="theme-modal-overlay">
+      <div className="theme-modal max-w-3xl">
+        <div className="theme-modal-header">
+          <h3 className="theme-modal-title">Agregar Nuevo Padre</h3>
+          <button onClick={onClose} className="theme-modal-close">
             <X size={20} />
           </button>
         </div>
@@ -50,19 +50,11 @@ export default function AddParentModal({ isOpen, onClose, onSaved }: any) {
         <form onSubmit={handleSubmit} className="p-5 overflow-y-auto">
           <ParentFormFields formData={formData} setFormData={setFormData} numero={nextNumero} />
 
-          <div className="pt-4 mt-5 flex justify-end gap-2 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition-colors"
-            >
+          <div className="theme-modal-footer">
+            <button type="button" onClick={onClose} className="theme-btn-ghost">
               Cancelar
             </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-            >
+            <button type="submit" disabled={loading} className="theme-btn-primary">
               {loading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
               Agregar Padre
             </button>

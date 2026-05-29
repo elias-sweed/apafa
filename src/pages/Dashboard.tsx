@@ -94,15 +94,14 @@ export default function Dashboard() {
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   return (
-    <div className="flex bg-slate-50 min-h-screen print:bg-white">
+    <div className="dashboard-theme">
       
       {/* SIDEBAR */}
       <div className="print:hidden">
         <Sidebar activeTab={activeTab} setActiveTab={handleTabChange} />
       </div>
       
-      {/* Le añadimos pb-16 (padding-bottom) para que nunca se corte al final */}
-      <main className="ml-64 flex-1 p-8 pb-16 print:ml-0 print:p-0">
+      <main className="dashboard-main">
         
         {/* VISTA 0: INICIO */}
         {activeTab === 'inicio' && (
@@ -113,13 +112,13 @@ export default function Dashboard() {
         {activeTab !== 'inicio' && (
           <div className="print:hidden mb-6">
             <header className={activeTab === 'configuracion' || activeTab === 'config' ? 'mb-8' : 'mb-6'}>
-              <h1 className="text-2xl font-bold text-slate-800 capitalize">
+              <h1 className="theme-page-title">
                 {activeTab === 'padres' ? 'Datos de Padres' : 
                  activeTab === 'asistencia' ? 'Asistencia' :
                  activeTab === 'qrs' ? 'QRs Generados' : 
                  'Configuración del Sistema'}
               </h1>
-              <p className="text-slate-500 text-sm">
+              <p className="theme-page-subtitle">
                 {activeTab === 'asistencia'
                   ? 'Registro de asistencia y control de inasistentes'
                   : activeTab === 'configuracion' || activeTab === 'config' 
@@ -152,25 +151,25 @@ export default function Dashboard() {
         {/* VISTA 1: TABLA DE PADRES */}
         {activeTab === 'padres' && (
           <>
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="flex justify-between items-center p-4 border-b border-slate-200 print:hidden">
-                <span className="text-sm text-slate-500">Haciendo clic en un padre puedes editar sus datos</span>
+            <div className="theme-card">
+              <div className="theme-card-header">
+                <span className="theme-hint">Haciendo clic en un padre puedes editar sus datos</span>
                 <button
                   onClick={() => setIsAddModalOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  className="theme-btn-primary"
                 >
                   <Plus size={18} />
                   Agregar Padre
                 </button>
               </div>
               {isLoading ? (
-                <div className="w-full p-8 text-center text-slate-500 animate-pulse">Cargando datos...</div>
+                <div className="w-full p-8 theme-loading">Cargando datos...</div>
               ) : rows.length === 0 ? (
-                <div className="p-20 text-center text-slate-500">No se encontraron resultados.</div>
+                <div className="p-20 theme-empty">No se encontraron resultados.</div>
               ) : (
                 <div className="overflow-hidden">
                   <table className="w-full text-left border-collapse">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[11px] font-semibold tracking-wider">
+                    <thead className="theme-table-head">
                       <tr>
                         <th className="px-4 py-4 w-24">N°</th>
                         <th className="px-4 py-4">Hijos</th>
@@ -179,7 +178,7 @@ export default function Dashboard() {
                         <th className="px-4 py-4 text-center">Acciones</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="theme-table-divide">
                       {(() => {
                         // Build name -> DNI lookup so rows with same name but missing DNI still group together
                         const nameToDNI: Record<string, string> = {};
@@ -201,7 +200,7 @@ export default function Dashboard() {
                           if (!set.has(sKey)) { set.add(sKey); groups.get(key)!.rows.push(row); }
                         }
                         return Array.from(groups.entries()).map(([key, group]) => (
-                          <tr key={key} className="hover:bg-blue-50/50 transition-colors">
+                          <tr key={key} className="theme-table-row">
                             <td className="px-4 py-3 align-top">
                               <span className="inline-block bg-yellow-500 text-black text-xs font-black px-2 py-1 rounded">
                                 {formatParentNumero(group.rows[0].id)}
@@ -210,31 +209,31 @@ export default function Dashboard() {
                             <td className="px-4 py-3 align-top">
                               <div className="space-y-1">
                                 {group.rows.map((r: any) => (
-                                  <div key={r.id} className="text-[11px] text-slate-700 leading-tight">
-                                    <span className="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-medium uppercase">{r.grado} "{r.seccion}"</span>
+                                  <div key={r.id} className="text-[11px] text-dash-text-muted leading-tight">
+                                    <span className="px-1.5 py-0.5 bg-dash-surface-elevated rounded text-[10px] font-medium uppercase">{r.grado} "{r.seccion}"</span>
                                     <span className="ml-1">{r.estudiante}</span>
                                   </div>
                                 ))}
                               </div>
                             </td>
-                            <td className="px-4 py-3 text-sm font-semibold text-slate-800 uppercase">
+                            <td className="px-4 py-3 text-sm font-semibold text-dash-text uppercase">
                               {group.displayName || <span className="text-orange-500 text-xs italic">Falta Nombre</span>}
                             </td>
-                            <td className="px-4 py-3 text-sm text-slate-500">
-                              {group.dni || <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-bold">SIN DNI</span>}
+                            <td className="px-4 py-3 text-sm text-dash-text-muted">
+                              {group.dni || <span className="bg-orange-500/20 text-orange-400 px-2 py-1 rounded text-xs font-bold">SIN DNI</span>}
                             </td>
                             <td className="px-4 py-3 text-center whitespace-nowrap">
                               <div className="flex items-center justify-center gap-1">
                                 <button 
                                   onClick={() => handleEdit(group.rows[0])}
-                                  className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                                  className="theme-btn-icon-edit"
                                   title="Editar Datos"
                                 >
                                   <Pencil size={18} />
                                 </button>
                                 <button 
                                   onClick={() => handleDelete(group.rows)}
-                                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                  className="theme-btn-icon-delete"
                                   title="Eliminar"
                                 >
                                   <Trash2 size={18} />
@@ -273,22 +272,22 @@ export default function Dashboard() {
 
         {/* PAGINACIÓN - Solo si estamos en Padres o QRs */}
         {(activeTab === 'padres' || activeTab === 'qrs') && !isLoading && rows.length > 0 && (
-          <div className="mt-6 p-4 bg-white shadow-sm rounded-xl border border-slate-200 flex justify-between items-center print:hidden">
-            <span className="text-sm text-slate-600 font-medium">
-              Mostrando página {filters.page + 1} de {totalPages} <span className="text-slate-400 mx-2">|</span> Total: <span className="font-bold text-slate-800">{totalCount}</span> registros
+          <div className="theme-pagination">
+            <span className="text-sm text-dash-text-muted font-medium">
+              Mostrando página {filters.page + 1} de {totalPages} <span className="text-dash-text-subtle mx-2">|</span> Total: <span className="font-bold text-dash-text">{totalCount}</span> registros
             </span>
             <div className="flex gap-2">
               <button 
                 onClick={() => setFilters(f => ({...f, page: Math.max(0, f.page - 1)}))}
                 disabled={filters.page === 0}
-                className="p-2 rounded hover:bg-slate-50 border border-slate-200 disabled:opacity-30 transition-all"
+                className="theme-btn-pagination"
               >
                 <ChevronLeft size={20} />
               </button>
               <button 
                 onClick={() => setFilters(f => ({...f, page: f.page + 1}))}
                 disabled={filters.page >= totalPages - 1}
-                className="p-2 rounded hover:bg-slate-50 border border-slate-200 transition-all disabled:opacity-30"
+                className="theme-btn-pagination"
               >
                 <ChevronRight size={20} />
               </button>

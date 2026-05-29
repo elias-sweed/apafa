@@ -6,24 +6,24 @@ export default function FilterBar({ filters, setFilters }: any) {
 
   const clearSearch = () => setFilters({ ...filters, searchTerm: '', page: 0 });
 
+  const selectClass = 'theme-select';
+
   return (
-    <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-wrap gap-4 items-center">
+    <div className="theme-panel mb-6 flex flex-wrap gap-4 items-center">
       <div className="relative flex-1 min-w-62.5">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-dash-text-subtle" size={18} />
         <input
           type="text"
           placeholder="Buscar estudiante o DNI..."
           value={filters.searchTerm || ''}
-          className={`w-full pl-10 py-2 rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 ${
-            filters.searchTerm ? 'pr-10' : 'pr-4'
-          }`}
+          className={`theme-search-input ${filters.searchTerm ? 'pr-10' : 'pr-4'}`}
           onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value, page: 0 })}
         />
         {filters.searchTerm && (
           <button
             type="button"
             onClick={clearSearch}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-dash-text-subtle hover:text-dash-text hover:bg-dash-surface-elevated rounded-full transition-colors"
             title="Limpiar búsqueda"
             aria-label="Limpiar búsqueda"
           >
@@ -33,7 +33,7 @@ export default function FilterBar({ filters, setFilters }: any) {
       </div>
 
       <select 
-        className="px-4 py-2 rounded-lg border border-slate-200 outline-none bg-white"
+        className="theme-select"
         onChange={(e) => setFilters({...filters, sortBy: e.target.value, page: 0})}
         value={filters.sortBy || 'alfabetico'}
       >
@@ -41,9 +41,8 @@ export default function FilterBar({ filters, setFilters }: any) {
         <option value="recientes">Más Recientes</option>
       </select>
 
-      {/* 1. FILTRO DE NIVEL PRINCIPAL */}
       <select 
-        className="px-4 py-2 rounded-lg border border-slate-200 outline-none bg-white"
+        className="theme-select"
         onChange={(e) => setFilters({...filters, nivel: e.target.value, grado: '', seccion: '', page: 0})}
         value={filters.nivel || ''}
       >
@@ -53,10 +52,9 @@ export default function FilterBar({ filters, setFilters }: any) {
         <option value="SECUNDARIA">Secundaria</option>
       </select>
 
-      {/* 2. FILTROS DINÁMICOS DE GRADO (Aparecen según el nivel que elijas) */}
       {filters.nivel === 'INICIAL' && (
         <select 
-          className="px-4 py-2 rounded-lg border border-slate-200 outline-none bg-white animate-in fade-in"
+          className={selectClass}
           onChange={(e) => setFilters({...filters, grado: e.target.value, seccion: '', page: 0})}
           value={filters.grado || ''}
         >
@@ -69,7 +67,7 @@ export default function FilterBar({ filters, setFilters }: any) {
 
       {filters.nivel === 'PRIMARIA' && (
         <select 
-          className="px-4 py-2 rounded-lg border border-slate-200 outline-none bg-white animate-in fade-in"
+          className={selectClass}
           onChange={(e) => setFilters({...filters, grado: e.target.value, seccion: '', page: 0})}
           value={filters.grado || ''}
         >
@@ -85,7 +83,7 @@ export default function FilterBar({ filters, setFilters }: any) {
 
       {filters.nivel === 'SECUNDARIA' && (
         <select 
-          className="px-4 py-2 rounded-lg border border-slate-200 outline-none bg-white animate-in fade-in"
+          className={selectClass}
           onChange={(e) => setFilters({...filters, grado: e.target.value, seccion: '', page: 0})}
           value={filters.grado || ''}
         >
@@ -98,10 +96,9 @@ export default function FilterBar({ filters, setFilters }: any) {
         </select>
       )}
 
-      {/* 3. FILTRO DE SECCIÓN (Aparece si hay un Nivel seleccionado) */}
       {filters.nivel && (
         <select 
-          className="px-4 py-2 rounded-lg border border-slate-200 outline-none bg-white animate-in fade-in"
+          className={selectClass}
           onChange={(e) => setFilters({...filters, seccion: e.target.value, page: 0})}
           value={filters.seccion || ''}
         >
@@ -117,8 +114,8 @@ export default function FilterBar({ filters, setFilters }: any) {
         onClick={() => setFilters({ ...filters, soloHoy: !filters.soloHoy, page: 0 })}
         className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
           filters.soloHoy
-            ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
-            : 'bg-white border-slate-200 text-slate-600'
+            ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400'
+            : 'bg-dash-surface-elevated border-dash-border text-dash-text-muted'
         }`}
         title="Solo registros agregados hoy (Excel o manual)"
       >
@@ -134,7 +131,9 @@ export default function FilterBar({ filters, setFilters }: any) {
       <button 
         onClick={() => setFilters({...filters, incompleto: !filters.incompleto, page: 0})}
         className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
-          filters.incompleto ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-white border-slate-200 text-slate-600'
+          filters.incompleto
+            ? 'bg-orange-500/15 border-orange-500/40 text-orange-400'
+            : 'bg-dash-surface-elevated border-dash-border text-dash-text-muted'
         }`}
       >
         <AlertCircle size={18} />

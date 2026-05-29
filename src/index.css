@@ -1,5 +1,298 @@
 @import "tailwindcss";
 
+/* ─── Tokens globales del dashboard (tema oscuro) ─── */
+@theme {
+  --color-dash-bg: #0b1120;
+  --color-dash-surface: #151c2c;
+  --color-dash-surface-elevated: #1c2538;
+  --color-dash-surface-muted: #111827;
+  --color-dash-border: #2a3548;
+  --color-dash-border-subtle: #1e293b;
+  --color-dash-text: #e2e8f0;
+  --color-dash-text-muted: #94a3b8;
+  --color-dash-text-subtle: #64748b;
+  --color-dash-accent: #3b82f6;
+  --color-dash-accent-hover: #2563eb;
+
+  --color-auth-bg: #030303;
+  --color-auth-surface: #18181b;
+  --color-auth-border: rgb(255 255 255 / 0.1);
+}
+
+@layer components {
+  /* ─── Layout del dashboard ─── */
+  .dashboard-theme {
+    @apply flex min-h-screen bg-dash-bg text-dash-text print:bg-white print:text-black;
+  }
+
+  .dashboard-main {
+    @apply ml-64 flex-1 p-8 pb-16 print:ml-0 print:p-0;
+  }
+
+  /* ─── Tipografía ─── */
+  .theme-page-title {
+    @apply text-2xl font-bold text-dash-text capitalize;
+  }
+
+  .theme-page-subtitle {
+    @apply text-dash-text-muted text-sm;
+  }
+
+  .theme-section-title {
+    @apply text-xl font-bold text-dash-text mb-4;
+  }
+
+  .theme-label {
+    @apply block text-sm font-medium text-dash-text-muted mb-1;
+  }
+
+  .theme-form-heading {
+    @apply font-semibold text-dash-text border-b border-dash-border pb-2 mb-3;
+  }
+
+  /* ─── Superficies ─── */
+  .theme-card {
+    @apply bg-dash-surface rounded-xl shadow-sm border border-dash-border overflow-hidden;
+  }
+
+  .theme-panel {
+    @apply bg-dash-surface p-4 rounded-xl shadow-sm border border-dash-border;
+  }
+
+  .theme-stat-card {
+    @apply bg-dash-surface p-6 rounded-xl border border-dash-border shadow-sm flex items-center gap-4;
+  }
+
+  .theme-card-header {
+    @apply flex justify-between items-center p-4 border-b border-dash-border print:hidden;
+  }
+
+  .theme-card-section-header {
+    @apply border-b border-dash-border-subtle p-6 bg-dash-surface-muted flex items-center gap-3;
+  }
+
+  .theme-inner-panel {
+    @apply bg-dash-surface-muted border border-dash-border rounded-xl p-4;
+  }
+
+  /* ─── Formularios ─── */
+  .theme-input {
+    @apply w-full px-3 py-2 border border-dash-border bg-dash-surface-elevated rounded-lg outline-none
+           focus:ring-2 focus:ring-dash-accent text-dash-text text-sm
+           placeholder:text-dash-text-subtle;
+  }
+
+  .theme-select {
+    @apply px-4 py-2 rounded-lg border border-dash-border outline-none bg-dash-surface-elevated text-dash-text;
+  }
+
+  .theme-search-input {
+    @apply w-full pl-10 py-2 rounded-lg border border-dash-border outline-none
+           focus:ring-2 focus:ring-dash-accent bg-dash-surface-elevated text-dash-text
+           placeholder:text-dash-text-subtle;
+  }
+
+  /* ─── Tablas ─── */
+  .theme-table-head {
+    @apply bg-dash-surface-muted border-b border-dash-border text-dash-text-muted
+           uppercase text-[11px] font-semibold tracking-wider;
+  }
+
+  .theme-table-row {
+    @apply hover:bg-blue-500/5 transition-colors;
+  }
+
+  .theme-table-divide {
+    @apply divide-y divide-dash-border-subtle;
+  }
+
+  /* ─── Botones ─── */
+  .theme-btn-primary {
+    @apply flex items-center gap-2 px-4 py-2 bg-dash-accent text-white font-medium rounded-lg
+           hover:bg-dash-accent-hover transition-colors text-sm disabled:opacity-50;
+  }
+
+  .theme-btn-ghost {
+    @apply px-4 py-2 text-dash-text-muted font-medium hover:bg-dash-surface-elevated
+           rounded-lg transition-colors;
+  }
+
+  .theme-btn-icon-edit {
+    @apply p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors;
+  }
+
+  .theme-btn-icon-delete {
+    @apply p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors;
+  }
+
+  .theme-btn-pagination {
+    @apply p-2 rounded hover:bg-dash-surface-elevated border border-dash-border
+           disabled:opacity-30 transition-all text-dash-text-muted;
+  }
+
+  /* ─── Paginación / estados ─── */
+  .theme-pagination {
+    @apply mt-6 p-4 bg-dash-surface shadow-sm rounded-xl border border-dash-border
+           flex justify-between items-center print:hidden;
+  }
+
+  .theme-empty {
+    @apply text-center text-dash-text-muted;
+  }
+
+  .theme-loading {
+    @apply text-center text-dash-text-muted animate-pulse;
+  }
+
+  .theme-hint {
+    @apply text-sm text-dash-text-muted;
+  }
+
+  /* ─── Modales ─── */
+  .theme-modal-overlay {
+    @apply fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4;
+  }
+
+  .theme-modal {
+    @apply bg-dash-surface rounded-xl shadow-xl w-full overflow-hidden max-h-[90vh] flex flex-col;
+    animation: theme-modal-in 0.2s ease-out;
+  }
+
+  .theme-modal-header {
+    @apply flex justify-between items-center p-5 border-b border-dash-border
+           bg-dash-surface-muted shrink-0;
+  }
+
+  .theme-modal-title {
+    @apply font-bold text-dash-text;
+  }
+
+  .theme-modal-close {
+    @apply text-dash-text-subtle hover:text-dash-text transition-colors;
+  }
+
+  .theme-modal-footer {
+    @apply pt-4 mt-5 flex justify-end gap-2 border-t border-dash-border-subtle;
+  }
+
+  /* ─── Sidebar ─── */
+  .theme-sidebar {
+    @apply w-64 bg-dash-surface-muted h-screen text-white flex flex-col fixed left-0 top-0;
+  }
+
+  .theme-sidebar-header {
+    @apply p-6 border-b border-dash-border;
+  }
+
+  .theme-sidebar-brand {
+    @apply text-xl font-bold text-blue-400;
+  }
+
+  .theme-sidebar-nav-item {
+    @apply w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
+           text-dash-text-muted hover:bg-dash-surface-elevated;
+  }
+
+  .theme-sidebar-nav-item-active {
+    @apply bg-dash-accent text-white;
+  }
+
+  .theme-sidebar-footer {
+    @apply p-4 border-t border-dash-border space-y-2;
+  }
+
+  /* ─── Accesos rápidos / tarjetas interactivas ─── */
+  .theme-action-card {
+    @apply flex items-center justify-between p-6 bg-dash-surface border border-dash-border
+           rounded-xl shadow-sm hover:border-blue-500/50 hover:shadow-md transition-all;
+  }
+
+  .theme-action-icon {
+    @apply p-3 bg-dash-surface-muted text-dash-text-muted rounded-lg transition-colors;
+  }
+
+  .theme-action-card:hover .theme-action-icon {
+    @apply bg-blue-500/10 text-blue-400;
+  }
+
+  .theme-action-card-arrow {
+    @apply text-dash-text-subtle;
+  }
+
+  .theme-action-card:hover .theme-action-card-arrow {
+    @apply text-blue-400;
+  }
+
+  /* ─── Login / auth ─── */
+  .auth-theme {
+    @apply min-h-screen bg-auth-bg flex items-center justify-center p-4 relative overflow-hidden;
+  }
+
+  .auth-card {
+    @apply relative z-10 bg-zinc-900/70 backdrop-blur-md p-8 rounded-2xl
+           shadow-[0_0_50px_rgba(0,0,0,0.5)] w-full max-w-md border border-auth-border;
+  }
+
+  .auth-input {
+    @apply w-full pl-11 pr-4 py-3 bg-zinc-900/50 border rounded-xl outline-none transition-all
+           focus:bg-zinc-800 text-white placeholder:text-zinc-600;
+    color-scheme: dark;
+  }
+
+  .auth-input:-webkit-autofill,
+  .auth-input:-webkit-autofill:hover,
+  .auth-input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 30px #18181b inset;
+    -webkit-text-fill-color: white;
+  }
+
+  .auth-input-normal {
+    @apply border-white/10 focus:ring-2 focus:ring-white/20;
+  }
+
+  .auth-input-locked {
+    @apply border-red-900/50 text-zinc-500 cursor-not-allowed;
+  }
+
+  .auth-btn-primary {
+    @apply w-full font-bold py-4 rounded-xl shadow-lg transition-all flex items-center
+           justify-center gap-2 bg-white hover:bg-zinc-300 text-black active:scale-[0.98];
+  }
+
+  .auth-btn-locked {
+    @apply bg-red-950/30 text-red-400 border border-red-900/50 cursor-not-allowed;
+  }
+
+  .auth-logo-ring {
+    @apply w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4
+           bg-zinc-800/50 shadow-inner border border-white/10 overflow-hidden p-2;
+  }
+
+  .animate-fade-in {
+    animation: theme-fade-in 0.3s ease-out;
+  }
+}
+
+@keyframes theme-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes theme-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Conservar amarillo del carnet y bordes al imprimir (Chrome/Edge suelen quitar fondos) */
 @media print {
   .carnet-numero-badge {

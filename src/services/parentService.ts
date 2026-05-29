@@ -53,7 +53,7 @@ export const parentService = {
       // Separamos los términos por espacios para buscar en diferentes columnas
       const terms = searchTerm.trim().split(/\s+/);
       
-      terms.forEach(term => {
+      terms.forEach((term: string) => {
         let orString = `estudiante.ilike.%${term}%,dni_estudiante.ilike.%${term}%,asociado_dni.ilike.%${term}%,asociado_nombre.ilike.%${term}%,grado.ilike.%${term}%,seccion.ilike.%${term}%`;
         
         // Si el término es numérico (ej. "0001"), también buscamos por ID

@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { asistenciaService } from '../../services/asistenciaService';
 import { Download, Users, Calendar, AlertTriangle, Trash2, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { exportInasistentesExcel } from '../../utils/exportInasistentesExcel';
 
 type Filtro = 'todos' | 'asistio' | 'falta';
 
@@ -149,21 +150,23 @@ export default function AsistenciaTab() {
 
   const eventoActual = eventos?.find(e => e.id === eventoSeleccionado);
 
-  const exportarCSV = () => {
-    const headers = ['Apoderado', 'DNI', 'Hijos'];
-    const rows = inasistentes.map((p: any) => [
-      p.asociado_nombre,
-      p.asociado_dni,
-      p.hijos?.map((h: any) => `${h.estudiante} (${h.grado} ${h.seccion})`).join('; '),
-    ]);
-    const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `inasistentes_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const exportarExcel = () => {
+    if (!eventoActual) {
+      toast.error('Selecciona un evento para exportar');
+      return;
+    }
+    if (inasistentes.length === 0) {
+      toast.info('No hay inasistentes para exportar en este evento');
+      return;
+    }
+    exportInasistentesExcel({
+      eventoNombre: eventoActual.nombre,
+      eventoFecha: eventoActual.fecha || '',
+      inasistentes,
+      totalPadres,
+      totalAsistieron,
+    });
+    toast.success('Excel exportado correctamente');
   };
 
   if (loadingAsistencias && asistencias.length === 0 && inasistentes.length === 0) {
@@ -300,11 +303,11 @@ export default function AsistenciaTab() {
             ))}
           </div>
           <button
-            onClick={exportarCSV}
+            onClick={exportarExcel}
             className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
           >
             <Download size={16} />
-            Exportar Inasistentes
+            Exportar Excel
           </button>
         </div>
 

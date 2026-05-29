@@ -2,6 +2,7 @@ import { Users, QrCode, Settings, LogOut, LayoutDashboard, ClipboardCheck, Scan 
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import logoSchool from '../assets/logo.png';
 
 interface SidebarProps {
   activeTab: string;
@@ -27,8 +28,13 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
 
   return (
     <div className="theme-sidebar">
-      <div className="theme-sidebar-header">
-        <h2 className="theme-sidebar-brand">APAFA Control</h2>
+      <div className="theme-sidebar-header flex items-center gap-3">
+        <img
+          src={logoSchool}
+          alt="APAFA I.E. Jimenez Pimentel"
+          className="w-11 h-11 rounded-lg object-contain bg-white/10 p-1 shrink-0"
+        />
+        <h2 className="theme-sidebar-brand leading-tight">APAFA Control</h2>
       </div>
       
       <nav className="flex-1 p-4 space-y-2">

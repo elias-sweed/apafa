@@ -9,8 +9,10 @@ import QRSynchronizedTab from '../components/parents/QRSynchronizedTab';
 import AsistenciaTab from '../components/attendance/AsistenciaTab';
 import ConfigTab from '../components/settings/ConfigTab';
 import { parentService } from '../services/parentService';
+import { formatParentNumero } from '../components/parents/ParentFormFields';
 import { ChevronLeft, ChevronRight, Pencil, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { unregisterTodayPadronIds } from '../utils/todayPadronIds';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('inicio');
@@ -20,13 +22,26 @@ export default function Dashboard() {
   const [selectedParent, setSelectedParent] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  const [filters, setFilters] = useState({
+  const defaultFilters = {
     searchTerm: '',
     nivel: '',
     grado: '',
+    seccion: '',
     incompleto: false,
-    page: 0
-  });
+    soloHoy: false,
+    sortBy: 'alfabetico' as const,
+    page: 0,
+  };
+
+  const [filters, setFilters] = useState(defaultFilters);
+
+  const handleTabChange = (tab: string) => {
+    const padresQr = (t: string) => t === 'padres' || t === 'qrs';
+    if (padresQr(activeTab) && padresQr(tab) && tab !== activeTab) {
+      setFilters({ ...defaultFilters });
+    }
+    setActiveTab(tab);
+  };
 
   const pageSize = 100;
 
@@ -39,10 +54,13 @@ export default function Dashboard() {
         searchTerm: filters.searchTerm,
         nivel: filters.nivel,
         grado: filters.grado,
+        seccion: filters.seccion,
         incompleto: filters.incompleto,
+        soloHoy: filters.soloHoy,
+        sortBy: filters.sortBy,
       });
       if (res.error) throw new Error(typeof res.error === 'string' ? res.error : 'Error al cargar datos');
-      return res.data || [];
+      return { items: res.data || [], totalCount: res.count || 0 };
     },
     enabled: activeTab === 'padres' || activeTab === 'qrs',
   });
@@ -52,7 +70,8 @@ export default function Dashboard() {
       const res = await parentService.deleteParent(ids);
       if (res.error) throw new Error(typeof res.error === 'string' ? res.error : 'Error al eliminar');
     },
-    onSuccess: () => {
+    onSuccess: (_data, deletedIds) => {
+      unregisterTodayPadronIds(deletedIds);
       toast.success('Eliminado correctamente');
       queryClient.invalidateQueries({ queryKey: ['parents'] });
     },
@@ -70,14 +89,16 @@ export default function Dashboard() {
     deleteMutation.mutate(rows.map(r => r.id));
   };
 
-  const rows = data || [];
+  const rows = data?.items || [];
+  const totalCount = data?.totalCount || 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   return (
     <div className="flex bg-slate-50 min-h-screen print:bg-white">
       
       {/* SIDEBAR */}
       <div className="print:hidden">
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        <Sidebar activeTab={activeTab} setActiveTab={handleTabChange} />
       </div>
       
       {/* Le añadimos pb-16 (padding-bottom) para que nunca se corte al final */}
@@ -85,7 +106,7 @@ export default function Dashboard() {
         
         {/* VISTA 0: INICIO */}
         {activeTab === 'inicio' && (
-          <InicioTab setActiveTab={setActiveTab} />
+          <InicioTab setActiveTab={handleTabChange} />
         )}
 
         {/* ENCABEZADO INTELIGENTE (Aparece en todas menos en inicio) */}
@@ -151,6 +172,7 @@ export default function Dashboard() {
                   <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[11px] font-semibold tracking-wider">
                       <tr>
+                        <th className="px-4 py-4 w-24">N°</th>
                         <th className="px-4 py-4">Hijos</th>
                         <th className="px-4 py-4">Apoderado</th>
                         <th className="px-4 py-4">DNI</th>
@@ -180,6 +202,11 @@ export default function Dashboard() {
                         }
                         return Array.from(groups.entries()).map(([key, group]) => (
                           <tr key={key} className="hover:bg-blue-50/50 transition-colors">
+                            <td className="px-4 py-3 align-top">
+                              <span className="inline-block bg-yellow-500 text-black text-xs font-black px-2 py-1 rounded">
+                                {formatParentNumero(group.rows[0].id)}
+                              </span>
+                            </td>
                             <td className="px-4 py-3 align-top">
                               <div className="space-y-1">
                                 {group.rows.map((r: any) => (
@@ -240,14 +267,16 @@ export default function Dashboard() {
         {/* VISTA 2: PESTAÑA DE QRS */}
         {activeTab === 'qrs' && (
           <div className="bg-transparent rounded-xl">
-            <QRSynchronizedTab data={rows} loading={isLoading} pageOffset={filters.page * pageSize} />
+            <QRSynchronizedTab data={rows} loading={isLoading} soloHoy={filters.soloHoy} />
           </div>
         )}
 
         {/* PAGINACIÓN - Solo si estamos en Padres o QRs */}
         {(activeTab === 'padres' || activeTab === 'qrs') && !isLoading && rows.length > 0 && (
           <div className="mt-6 p-4 bg-white shadow-sm rounded-xl border border-slate-200 flex justify-between items-center print:hidden">
-            <span className="text-sm text-slate-600 font-medium">Mostrando página {filters.page + 1}</span>
+            <span className="text-sm text-slate-600 font-medium">
+              Mostrando página {filters.page + 1} de {totalPages} <span className="text-slate-400 mx-2">|</span> Total: <span className="font-bold text-slate-800">{totalCount}</span> registros
+            </span>
             <div className="flex gap-2">
               <button 
                 onClick={() => setFilters(f => ({...f, page: Math.max(0, f.page - 1)}))}
@@ -258,7 +287,7 @@ export default function Dashboard() {
               </button>
               <button 
                 onClick={() => setFilters(f => ({...f, page: f.page + 1}))}
-                disabled={rows.length < pageSize}
+                disabled={filters.page >= totalPages - 1}
                 className="p-2 rounded hover:bg-slate-50 border border-slate-200 transition-all disabled:opacity-30"
               >
                 <ChevronRight size={20} />

@@ -129,7 +129,7 @@ export default function Login() {
           />
           
           <BlurText
-            text="Ingrese sus credenciales de APAFA"
+            text="Ingrese sus credenciales de APAFA por favor."
             delay={150}
             animateBy="words"
             direction="bottom"
